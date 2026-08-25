@@ -1,0 +1,275 @@
+import Foundation
+import Observation
+import OSLog
+
+@MainActor
+@Observable
+final class KioskSession {
+    enum Presentation: Equatable {
+        case startup
+        case maintenance
+        case configurationError(String)
+        case unavailable
+        case browser(BrowserPresentation)
+    }
+
+    struct BrowserPresentation: Equatable, Identifiable {
+        let id: UUID
+        let configuration: ManagedConfiguration
+    }
+
+    private enum InactivePresentation {
+        case maintenance
+        case configurationError(String)
+    }
+
+    private static let configurationRefreshInterval = Duration.seconds(30)
+    private static let idleCheckInterval = Duration.seconds(1)
+    private static let retryDelay = Duration.seconds(2)
+    private static let maximumBeginAttempts = 3
+
+    private(set) var presentation = Presentation.startup
+
+    private let defaults: UserDefaults
+    private let assessmentController: AssessmentController
+    private let activityMonitor = IdleActivityMonitor()
+    private let clock = ContinuousClock()
+
+    private var desiredConfiguration: ManagedConfiguration?
+    private var inactivePresentation = InactivePresentation.maintenance
+    private var beginAttempts = 0
+    private var lastActivity = ContinuousClock.now
+    private var retryTask: Task<Void, Never>?
+
+    #if DEBUG
+        private let runsUnlocked = CommandLine.arguments.contains("--unlocked")
+    #endif
+
+    init(
+        defaults: UserDefaults = .standard,
+        assessmentController: AssessmentController = AssessmentController()
+    ) {
+        self.defaults = defaults
+        self.assessmentController = assessmentController
+        assessmentController.delegate = self
+    }
+
+    func run() async {
+        let version = Bundle.main.object(
+            forInfoDictionaryKey: "CFBundleShortVersionString"
+        ) as? String ?? "unknown"
+        Log.app.info("Plinth launched, version \(version, privacy: .public)")
+
+        activityMonitor.start { [weak self] in
+            self?.lastActivity = .now
+        }
+        defer {
+            activityMonitor.stop()
+            retryTask?.cancel()
+        }
+
+        refreshConfiguration()
+
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { [weak self] in
+                await self?.monitorConfiguration()
+            }
+            group.addTask { [weak self] in
+                await self?.monitorIdleTimeout()
+            }
+            await group.waitForAll()
+        }
+    }
+
+    private func monitorConfiguration() async {
+        while !Task.isCancelled {
+            do {
+                try await Task.sleep(for: Self.configurationRefreshInterval)
+            } catch {
+                return
+            }
+            refreshConfiguration()
+        }
+    }
+
+    private func monitorIdleTimeout() async {
+        while !Task.isCancelled {
+            do {
+                try await Task.sleep(for: Self.idleCheckInterval)
+            } catch {
+                return
+            }
+
+            guard case let .browser(browser) = presentation,
+                  browser.configuration.idleResetSeconds > 0,
+                  lastActivity.duration(to: clock.now) >= .seconds(
+                      browser.configuration.idleResetSeconds
+                  )
+            else {
+                continue
+            }
+
+            resetBrowser(using: browser.configuration)
+        }
+    }
+
+    private func refreshConfiguration() {
+        do {
+            switch try ManagedConfiguration.load(from: defaults) {
+            case .disabled:
+                disableKiosk(for: .maintenance)
+            case let .enabled(configuration):
+                enableKiosk(with: configuration)
+            }
+        } catch {
+            Log.configuration.error("Managed configuration is invalid: \(error.localizedDescription, privacy: .public)")
+            disableKiosk(for: .configurationError(error.localizedDescription))
+        }
+    }
+
+    private func enableKiosk(with configuration: ManagedConfiguration) {
+        if desiredConfiguration == configuration {
+            return
+        }
+
+        desiredConfiguration = configuration
+        beginAttempts = 0
+        retryTask?.cancel()
+
+        #if DEBUG
+            if runsUnlocked {
+                Log.assessment.notice("Running in DEBUG unlocked mode")
+                showBrowser(using: configuration)
+                return
+            }
+        #endif
+
+        if assessmentController.hasSession {
+            if case .browser = presentation {
+                showBrowser(using: configuration)
+            }
+            return
+        }
+
+        beginAssessment()
+    }
+
+    private func disableKiosk(for inactivePresentation: InactivePresentation) {
+        desiredConfiguration = nil
+        self.inactivePresentation = inactivePresentation
+        beginAttempts = 0
+        retryTask?.cancel()
+        presentation = .startup
+
+        #if DEBUG
+            if runsUnlocked {
+                showInactivePresentation()
+                return
+            }
+        #endif
+
+        if assessmentController.hasSession {
+            assessmentController.end()
+        } else {
+            showInactivePresentation()
+        }
+    }
+
+    private func beginAssessment() {
+        guard desiredConfiguration != nil,
+              !assessmentController.hasSession,
+              beginAttempts < Self.maximumBeginAttempts
+        else {
+            return
+        }
+
+        beginAttempts += 1
+        presentation = .startup
+        assessmentController.begin()
+    }
+
+    private func scheduleAssessmentRetry() {
+        guard desiredConfiguration != nil,
+              beginAttempts < Self.maximumBeginAttempts
+        else {
+            return
+        }
+
+        retryTask?.cancel()
+        retryTask = Task { @concurrent [weak self] in
+            do {
+                try await Task.sleep(for: Self.retryDelay)
+            } catch {
+                return
+            }
+            await self?.beginAssessment()
+        }
+    }
+
+    private func showBrowser(using configuration: ManagedConfiguration) {
+        lastActivity = .now
+        presentation = .browser(
+            BrowserPresentation(id: UUID(), configuration: configuration)
+        )
+    }
+
+    private func resetBrowser(using configuration: ManagedConfiguration) {
+        Log.browser.info("Resetting browser after idle timeout")
+        presentation = .startup
+        lastActivity = .now
+
+        Task { [weak self] in
+            await Task.yield()
+            guard let self,
+                  desiredConfiguration == configuration
+            else {
+                return
+            }
+            showBrowser(using: configuration)
+        }
+    }
+
+    private func showInactivePresentation() {
+        switch inactivePresentation {
+        case .maintenance:
+            presentation = .maintenance
+        case let .configurationError(message):
+            presentation = .configurationError(message)
+        }
+    }
+}
+
+extension KioskSession: AssessmentControllerDelegate {
+    func assessmentDidBegin() {
+        guard let desiredConfiguration else {
+            assessmentController.end()
+            return
+        }
+
+        beginAttempts = 0
+        showBrowser(using: desiredConfiguration)
+    }
+
+    func assessmentFailedToBegin(with _: any Error) {
+        if desiredConfiguration == nil {
+            showInactivePresentation()
+        } else {
+            presentation = .unavailable
+            scheduleAssessmentRetry()
+        }
+    }
+
+    func assessmentWasInterrupted(with _: any Error) {
+        presentation = .unavailable
+        assessmentController.end()
+    }
+
+    func assessmentDidEnd() {
+        if desiredConfiguration != nil {
+            beginAttempts = 0
+            beginAssessment()
+        } else {
+            showInactivePresentation()
+        }
+    }
+}

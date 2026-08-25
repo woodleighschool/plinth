@@ -1,0 +1,176 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Release
+
+on:
+  release:
+    types:
+      - published
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: macOS release
+    runs-on: macos-26
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
+      APP_NAME: Plinth
+      PROJECT: Plinth.xcodeproj
+      SCHEME: Plinth
+      PKG_SIGNING_IDENTITY: "Developer ID Installer: Woodleigh School (SMLKBTR495)"
+
+    steps:
+      - name: Checkout release
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Import Developer ID Application certificate
+        uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7
+        with:
+          p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_P12_BASE64 }}
+          p12-password: ${{ secrets.APPLE_DEVELOPER_ID_P12_PASSWORD }}
+
+      - name: Download Developer ID provisioning profile
+        uses: apple-actions/download-provisioning-profiles@2126b5f86a0e2863cbf4d2d312112b22b943a594 # v6.1.0
+        with:
+          bundle-id: au.edu.vic.woodleigh.Plinth
+          profile-type: MAC_APP_DIRECT
+          issuer-id: ${{ vars.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ vars.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Validate release version
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          grep -Fqx "MARKETING_VERSION = ${VERSION} // x-release-please-version" Config/Version.xcconfig
+
+      - name: Archive app
+        run: |
+          xcodebuild \
+            -project "${PROJECT}" \
+            -scheme "${SCHEME}" \
+            -configuration Release \
+            -destination "generic/platform=macOS" \
+            -archivePath "${RUNNER_TEMP}/${APP_NAME}.xcarchive" \
+            DEVELOPMENT_TEAM="SMLKBTR495" \
+            CODE_SIGN_STYLE="Manual" \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            PROVISIONING_PROFILE_SPECIFIER="Plinth" \
+            archive
+
+      - name: Export app
+        run: |
+          xcodebuild \
+            -exportArchive \
+            -archivePath "${RUNNER_TEMP}/${APP_NAME}.xcarchive" \
+            -exportPath "${RUNNER_TEMP}/export" \
+            -exportOptionsPlist Config/ExportOptions.plist
+
+      - name: Notarize app
+        uses: woodleighschool/.github/actions/apple-notarize@a85ca6bcf210fe5e22e50da1d832f211c2b44605 # apple-notarize-v2.0.0
+        with:
+          product-path: ${{ runner.temp }}/export/${{ env.APP_NAME }}.app
+          issuer-id: ${{ vars.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ vars.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+      - name: Verify app
+        run: |
+          set -euo pipefail
+
+          APP_PATH="${RUNNER_TEMP}/export/${APP_NAME}.app"
+          EXECUTABLE="${APP_PATH}/Contents/MacOS/${APP_NAME}"
+
+          codesign --verify --deep --strict --verbose=2 "${APP_PATH}"
+          spctl --assess --type execute --verbose=2 "${APP_PATH}"
+
+          ARCHS="$(lipo -archs "${EXECUTABLE}")"
+          case " ${ARCHS} " in *" arm64 "*) ;; *) exit 1 ;; esac
+          case " ${ARCHS} " in *" x86_64 "*) ;; *) exit 1 ;; esac
+
+          codesign -d --entitlements :- "${APP_PATH}" 2>/dev/null \
+            | plutil -extract com.apple.developer.automatic-assessment-configuration raw - \
+            | grep -Fqx true
+
+      - name: Import Developer ID Installer certificate
+        uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7
+        with:
+          p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_P12_BASE64 }}
+          p12-password: ${{ secrets.APPLE_DEVELOPER_ID_P12_PASSWORD }}
+
+      - name: Build and sign package
+        id: package
+        run: |
+          set -euo pipefail
+
+          VERSION="${RELEASE_TAG#v}"
+          PAYLOAD="${RUNNER_TEMP}/payload"
+          PKG_PATH="${GITHUB_WORKSPACE}/dist/${APP_NAME}-${VERSION}.pkg"
+
+          mkdir -p \
+            "${PAYLOAD}/Applications" \
+            "${PAYLOAD}/Library/LaunchAgents" \
+            dist
+
+          ditto --norsrc \
+            "${RUNNER_TEMP}/export/${APP_NAME}.app" \
+            "${PAYLOAD}/Applications/${APP_NAME}.app"
+
+          install -m 0644 \
+            packaging/au.edu.vic.woodleigh.Plinth.plist \
+            "${PAYLOAD}/Library/LaunchAgents/au.edu.vic.woodleigh.Plinth.plist"
+
+          xattr -cr "${PAYLOAD}"
+          codesign --verify --deep --strict --verbose=2 \
+            "${PAYLOAD}/Applications/${APP_NAME}.app"
+
+          pkgbuild \
+            --root "${PAYLOAD}" \
+            --scripts packaging/scripts \
+            --identifier au.edu.vic.woodleigh.Plinth \
+            --version "${VERSION}" \
+            --install-location / \
+            --sign "${PKG_SIGNING_IDENTITY}" \
+            "${PKG_PATH}"
+
+          if pkgutil --payload-files "${PKG_PATH}" | grep -Eq '(^|/)\._'; then
+            echo "Package contains AppleDouble metadata" >&2
+            exit 1
+          fi
+
+          echo "path=${PKG_PATH}" >> "${GITHUB_OUTPUT}"
+
+      - name: Notarize package
+        uses: woodleighschool/.github/actions/apple-notarize@a85ca6bcf210fe5e22e50da1d832f211c2b44605 # apple-notarize-v2.0.0
+        with:
+          product-path: ${{ steps.package.outputs.path }}
+          issuer-id: ${{ vars.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ vars.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+      - name: Verify package
+        env:
+          PKG_PATH: ${{ steps.package.outputs.path }}
+        run: |
+          pkgutil --check-signature "${PKG_PATH}"
+          spctl --assess --type install --verbose=2 "${PKG_PATH}"
+
+      - name: Upload release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PKG_PATH: ${{ steps.package.outputs.path }}
+        run: |
+          gh release upload \
+            "${RELEASE_TAG}" \
+            "${PKG_PATH}" \
+            --clobber

@@ -14,19 +14,12 @@
 			remoteGlobalIDString = 41D62BB0303D75EB00E8681E;
 			remoteInfo = Plinth;
 		};
-		41D62BC9303D75ED00E8681E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 41D62BA9303D75EB00E8681E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 41D62BB0303D75EB00E8681E;
-			remoteInfo = Plinth;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		41D62BB1303D75EB00E8681E /* Plinth.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Plinth.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41D62BBE303D75ED00E8681E /* PlinthTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlinthTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		41D62BC8303D75ED00E8681E /* PlinthUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlinthUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D1000001303D75ED00E8681E /* Version.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Version.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -38,11 +31,6 @@
 		41D62BC1303D75ED00E8681E /* PlinthTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = PlinthTests;
-			sourceTree = "<group>";
-		};
-		41D62BCB303D75ED00E8681E /* PlinthUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = PlinthUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -58,11 +46,6 @@
 			files = (
 			);
 		};
-		41D62BC5303D75ED00E8681E /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			files = (
-			);
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -71,7 +54,7 @@
 			children = (
 				41D62BB3303D75EB00E8681E /* Plinth */,
 				41D62BC1303D75ED00E8681E /* PlinthTests */,
-				41D62BCB303D75ED00E8681E /* PlinthUITests */,
+				D1000002303D75ED00E8681E /* Config */,
 				41D62BB2303D75EB00E8681E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -81,9 +64,16 @@
 			children = (
 				41D62BB1303D75EB00E8681E /* Plinth.app */,
 				41D62BBE303D75ED00E8681E /* PlinthTests.xctest */,
-				41D62BC8303D75ED00E8681E /* PlinthUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D1000002303D75ED00E8681E /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				D1000001303D75ED00E8681E /* Version.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -128,27 +118,6 @@
 			productReference = 41D62BBE303D75ED00E8681E /* PlinthTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		41D62BC7303D75ED00E8681E /* PlinthUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 41D62BD6303D75ED00E8681E /* Build configuration list for PBXNativeTarget "PlinthUITests" */;
-			buildPhases = (
-				41D62BC4303D75ED00E8681E /* Sources */,
-				41D62BC5303D75ED00E8681E /* Frameworks */,
-				41D62BC6303D75ED00E8681E /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				41D62BCA303D75ED00E8681E /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				41D62BCB303D75ED00E8681E /* PlinthUITests */,
-			);
-			name = PlinthUITests;
-			productName = PlinthUITests;
-			productReference = 41D62BC8303D75ED00E8681E /* PlinthUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -156,18 +125,14 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2700;
-				LastUpgradeCheck = 2700;
+				LastSwiftUpdateCheck = 2650;
+				LastUpgradeCheck = 2650;
 				TargetAttributes = {
 					41D62BB0303D75EB00E8681E = {
-						CreatedOnToolsVersion = 27.0;
+						CreatedOnToolsVersion = 26.5;
 					};
 					41D62BBD303D75ED00E8681E = {
-						CreatedOnToolsVersion = 27.0;
-						TestTargetID = 41D62BB0303D75EB00E8681E;
-					};
-					41D62BC7303D75ED00E8681E = {
-						CreatedOnToolsVersion = 27.0;
+						CreatedOnToolsVersion = 26.5;
 						TestTargetID = 41D62BB0303D75EB00E8681E;
 					};
 				};
@@ -188,7 +153,6 @@
 			targets = (
 				41D62BB0303D75EB00E8681E /* Plinth */,
 				41D62BBD303D75ED00E8681E /* PlinthTests */,
-				41D62BC7303D75ED00E8681E /* PlinthUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -200,11 +164,6 @@
 			);
 		};
 		41D62BBC303D75ED00E8681E /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			files = (
-			);
-		};
-		41D62BC6303D75ED00E8681E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -222,11 +181,6 @@
 			files = (
 			);
 		};
-		41D62BC4303D75ED00E8681E /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			files = (
-			);
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -234,11 +188,6 @@
 			isa = PBXTargetDependency;
 			target = 41D62BB0303D75EB00E8681E /* Plinth */;
 			targetProxy = 41D62BBF303D75ED00E8681E /* PBXContainerItemProxy */;
-		};
-		41D62BCA303D75ED00E8681E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 41D62BB0303D75EB00E8681E /* Plinth */;
-			targetProxy = 41D62BC9303D75ED00E8681E /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -361,91 +310,73 @@
 		};
 		41D62BD1303D75ED00E8681E /* Debug configuration for PBXNativeTarget "Plinth" */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D1000001303D75ED00E8681E /* Version.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Plinth/Plinth.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = SMLKBTR495;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
-				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = au.edu.vic.woodleigh.Plinth;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				SDKROOT = auto;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = macosx;
-				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
-				XROS_DEPLOYMENT_TARGET = 27.0;
 			};
 			name = Debug;
 		};
 		41D62BD2303D75ED00E8681E /* Release configuration for PBXNativeTarget "Plinth" */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D1000001303D75ED00E8681E /* Version.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Plinth/Plinth.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = SMLKBTR495;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
-				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = au.edu.vic.woodleigh.Plinth;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				SDKROOT = auto;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = macosx;
-				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
-				XROS_DEPLOYMENT_TARGET = 27.0;
 			};
 			name = Release;
 		};
@@ -454,24 +385,14 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SMLKBTR495;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = au.edu.vic.woodleigh.PlinthTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = macosx;
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SDKROOT = macosx;
 				SWIFT_VERSION = 6.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Plinth.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Plinth";
-				XROS_DEPLOYMENT_TARGET = 27.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Plinth.app/Contents/MacOS/Plinth";
 			};
 			name = Debug;
 		};
@@ -480,74 +401,14 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SMLKBTR495;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = au.edu.vic.woodleigh.PlinthTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = macosx;
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SDKROOT = macosx;
 				SWIFT_VERSION = 6.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Plinth.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Plinth";
-				XROS_DEPLOYMENT_TARGET = 27.0;
-			};
-			name = Release;
-		};
-		41D62BD7303D75ED00E8681E /* Debug configuration for PBXNativeTarget "PlinthUITests" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = SMLKBTR495;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = au.edu.vic.woodleigh.PlinthUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = macosx;
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TEST_TARGET_NAME = Plinth;
-				XROS_DEPLOYMENT_TARGET = 27.0;
-			};
-			name = Debug;
-		};
-		41D62BD8303D75ED00E8681E /* Release configuration for PBXNativeTarget "PlinthUITests" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = SMLKBTR495;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = au.edu.vic.woodleigh.PlinthUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = macosx;
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TEST_TARGET_NAME = Plinth;
-				XROS_DEPLOYMENT_TARGET = 27.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Plinth.app/Contents/MacOS/Plinth";
 			};
 			name = Release;
 		};
@@ -575,14 +436,6 @@
 			buildConfigurations = (
 				41D62BD4303D75ED00E8681E /* Debug configuration for PBXNativeTarget "PlinthTests" */,
 				41D62BD5303D75ED00E8681E /* Release configuration for PBXNativeTarget "PlinthTests" */,
-			);
-			defaultConfigurationName = Release;
-		};
-		41D62BD6303D75ED00E8681E /* Build configuration list for PBXNativeTarget "PlinthUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				41D62BD7303D75ED00E8681E /* Debug configuration for PBXNativeTarget "PlinthUITests" */,
-				41D62BD8303D75ED00E8681E /* Release configuration for PBXNativeTarget "PlinthUITests" */,
 			);
 			defaultConfigurationName = Release;
 		};

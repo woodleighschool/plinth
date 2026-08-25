@@ -1,0 +1,77 @@
+[tools]
+periphery = "3.8.0"
+swiftformat = "0.62.1"
+lefthook = "2.1.11"
+actionlint = "1.7.12"
+zizmor = "1.29.0"
+oxfmt = "0.64.0"
+shellcheck = "0.11.0"
+"npm:@commitlint/cli" = "21.2.2"
+
+[settings]
+experimental = true
+pin = true
+lockfile = true
+
+[tasks.format]
+description = "Format Swift code"
+run = "swiftformat Plinth PlinthTests"
+
+[tasks.fmt-check]
+description = "Check Swift formatting"
+run = "swiftformat Plinth PlinthTests --lint"
+
+[tasks.build]
+description = "Build the unsigned universal macOS app"
+run = """
+xcodebuild build \
+  -project Plinth.xcodeproj \
+  -scheme Plinth \
+  -configuration Release \
+  -destination 'generic/platform=macOS' \
+  CODE_SIGNING_ALLOWED=NO
+"""
+
+[tasks.periphery]
+description = "Build the app and reject unused Swift code"
+run = """
+periphery scan \
+  --project Plinth.xcodeproj \
+  --schemes Plinth \
+  --format xcode \
+  --strict \
+  --disable-update-check \
+  --relative-results \
+  -- \
+  -destination 'platform=macOS' \
+  CODE_SIGNING_ALLOWED=NO
+"""
+
+[tasks.test]
+description = "Run focused Swift tests"
+run = """
+xcodebuild test \
+  -project Plinth.xcodeproj \
+  -scheme Plinth \
+  -destination 'platform=macOS' \
+  CODE_SIGNING_ALLOWED=NO
+"""
+
+[tasks.shell-lint]
+description = "Lint package scripts"
+run = "shellcheck packaging/scripts/*"
+
+[tasks.plist-lint]
+description = "Lint property lists"
+run = "plutil -lint Config/*.plist Plinth/Plinth.entitlements packaging/*.plist"
+
+[tasks.workflow-lint]
+description = "Lint GitHub Actions workflows"
+run = ["actionlint", "zizmor --offline --no-ignores .github/workflows"]
+
+[tasks.lint]
+description = "Run app and repository linters"
+depends = ["shell-lint", "plist-lint", "periphery"]
+
+[hooks]
+postinstall = "lefthook install"
