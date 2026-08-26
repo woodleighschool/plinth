@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/woodleighschool/plinth/compare/0.1.1...0.1.2) (2026-08-26)
+
+
+### Miscellaneous Chores
+
+* useless verification ([980ea18](https://github.com/woodleighschool/plinth/commit/980ea1877697b77eb03992843df07d088ea68396))
+
 ## [0.1.1](https://github.com/woodleighschool/plinth/compare/0.1.0...0.1.1) (2026-08-25)
 
 
