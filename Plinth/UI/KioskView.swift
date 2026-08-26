@@ -3,47 +3,40 @@ import SwiftUI
 struct KioskView: View {
     let session: KioskSession
 
-    var body: some View {
-        ZStack {
-            Group {
-                switch session.presentation {
-                case .startup:
-                    StatusView(
-                        title: "Preparing assessment browser…",
-                        message: nil,
-                        showsProgress: true
-                    )
-                case .maintenance:
-                    StatusView(
-                        title: "Assessment browser disabled for maintenance",
-                        message: "An administrator can re-enable this Mac through managed settings."
-                    )
-                case .scheduledOff:
-                    StatusView(
-                        title: "Assessment browser outside managed display hours",
-                        message: "It will resume automatically at the next scheduled time."
-                    )
-                case let .configurationError(message):
-                    StatusView(
-                        title: "Assessment browser configuration error",
-                        message: message
-                    )
-                case .unavailable:
-                    StatusView(
-                        title: "Assessment browser unavailable",
-                        message: "Contact IT for assistance."
-                    )
-                case let .browser(browser):
-                    BrowserView(configuration: browser.configuration)
-                        .id(browser.id)
-                }
-            }
+    @State private var administratorEscapeCode = ""
 
-            if session.presentsAdministratorEscape {
-                AdministratorEscapePrompt(
-                    dismiss: session.dismissAdministratorEscape,
-                    submit: session.submitAdministratorEscapeCode
+    var body: some View {
+        Group {
+            switch session.presentation {
+            case .startup:
+                StatusView(
+                    title: "Preparing assessment browser…",
+                    message: nil,
+                    showsProgress: true
                 )
+            case .maintenance:
+                StatusView(
+                    title: "Assessment browser disabled for maintenance",
+                    message: "An administrator can re-enable this Mac through managed settings."
+                )
+            case .scheduledOff:
+                StatusView(
+                    title: "Assessment browser outside managed display hours",
+                    message: "It will resume automatically at the next scheduled time."
+                )
+            case let .configurationError(message):
+                StatusView(
+                    title: "Assessment browser configuration error",
+                    message: message
+                )
+            case .unavailable:
+                StatusView(
+                    title: "Assessment browser unavailable",
+                    message: "Contact IT for assistance."
+                )
+            case let .browser(browser):
+                BrowserView(configuration: browser.configuration)
+                    .id(browser.id)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -54,72 +47,29 @@ struct KioskView: View {
         .task {
             await session.run()
         }
-    }
-}
-
-private struct AdministratorEscapePrompt: View {
-    let dismiss: () -> Void
-    let submit: (String) -> Bool
-
-    @State private var code = ""
-    @State private var showsIncorrectCode = false
-    @FocusState private var codeIsFocused: Bool
-
-    var body: some View {
-        ZStack {
-            Color.black.opacity(0.45)
-                .ignoresSafeArea()
-
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Administrator exit")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-
-                Text("Enter the managed escape code to stop Plinth.")
-                    .foregroundStyle(.secondary)
-
-                SecureField("Escape code", text: $code)
-                    .textFieldStyle(.roundedBorder)
-                    .focused($codeIsFocused)
-                    .onSubmit(attemptExit)
-
-                if showsIncorrectCode {
-                    Text("The escape code is incorrect.")
-                        .foregroundStyle(.red)
-                }
-
-                HStack {
-                    Spacer()
-
-                    Button("Cancel", role: .cancel, action: dismiss)
-                        .keyboardShortcut(.cancelAction)
-
-                    Button("Exit Plinth", action: attemptExit)
-                        .keyboardShortcut(.defaultAction)
-                        .buttonStyle(.borderedProminent)
-                }
+        .alert("Administrator exit", isPresented: administratorEscapeIsPresented) {
+            SecureField("Escape code", text: $administratorEscapeCode)
+            Button("Cancel", role: .cancel) {}
+            Button("Exit Plinth") {
+                let code = administratorEscapeCode
+                administratorEscapeCode = ""
+                _ = session.submitAdministratorEscapeCode(code)
             }
-            .padding(24)
-            .frame(width: 420)
-            .background(.regularMaterial, in: .rect(cornerRadius: 12))
-            .shadow(radius: 24)
-        }
-        .onAppear {
-            codeIsFocused = true
+            .keyboardShortcut(.defaultAction)
+            .disabled(administratorEscapeCode.isEmpty)
+        } message: {
+            Text("Enter the managed escape code to stop Plinth.")
         }
     }
 
-    private func attemptExit() {
-        guard !code.isEmpty else {
-            return
-        }
-
-        if submit(code) {
-            code = ""
-        } else {
-            code = ""
-            showsIncorrectCode = true
-            codeIsFocused = true
+    private var administratorEscapeIsPresented: Binding<Bool> {
+        Binding {
+            session.presentsAdministratorEscape
+        } set: { isPresented in
+            if !isPresented {
+                administratorEscapeCode = ""
+                session.dismissAdministratorEscape()
+            }
         }
     }
 }
