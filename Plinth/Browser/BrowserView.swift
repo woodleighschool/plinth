@@ -3,11 +3,58 @@ import OSLog
 import SwiftUI
 import WebKit
 
-struct BrowserView: NSViewRepresentable {
+nonisolated enum BrowserFailure: Equatable, Sendable {
+    case blockedNavigation(host: String?)
+
+    var title: String {
+        "Navigation blocked"
+    }
+
+    var message: String {
+        switch self {
+        case let .blockedNavigation(host):
+            if let host {
+                "\(host) isn't allowed by the managed configuration."
+            } else {
+                "This destination isn't allowed by the managed configuration."
+            }
+        }
+    }
+}
+
+struct BrowserView: View {
     let configuration: ManagedConfiguration
 
+    @State private var failure: BrowserFailure?
+
+    var body: some View {
+        ZStack {
+            ManagedWebView(configuration: configuration) {
+                failure = $0
+            }
+
+            if let failure {
+                StatusView(
+                    title: failure.title,
+                    message: failure.message,
+                    systemImage: "exclamationmark.triangle"
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(.background)
+            }
+        }
+    }
+}
+
+private struct ManagedWebView: NSViewRepresentable {
+    let configuration: ManagedConfiguration
+    let reportFailure: @MainActor (BrowserFailure) -> Void
+
     func makeCoordinator() -> BrowserController {
-        BrowserController(configuration: configuration)
+        BrowserController(
+            urlPolicy: configuration.urlPolicy,
+            reportFailure: reportFailure
+        )
     }
 
     func makeNSView(context: Context) -> WKWebView {
@@ -45,11 +92,27 @@ final class KioskWebView: WKWebView {
     }
 }
 
+@MainActor
 final class BrowserController: NSObject, WKNavigationDelegate, WKUIDelegate {
-    private let configuration: ManagedConfiguration
+    private let urlPolicy: URLPolicy
+    private let reportFailure: @MainActor (BrowserFailure) -> Void
 
-    init(configuration: ManagedConfiguration) {
-        self.configuration = configuration
+    init(
+        urlPolicy: URLPolicy,
+        reportFailure: @escaping @MainActor (BrowserFailure) -> Void
+    ) {
+        self.urlPolicy = urlPolicy
+        self.reportFailure = reportFailure
+    }
+
+    func handleTopLevelNavigation(to url: URL) -> Bool {
+        guard urlPolicy.allows(url) else {
+            logBlockedNavigation(url)
+            reportFailure(.blockedNavigation(host: url.host))
+            return false
+        }
+
+        return true
     }
 
     func webView(
@@ -65,20 +128,17 @@ final class BrowserController: NSObject, WKNavigationDelegate, WKUIDelegate {
         }
 
         if navigationAction.targetFrame == nil {
-            if configuration.urlPolicy.allows(url) {
+            if handleTopLevelNavigation(to: url) {
                 webView.load(navigationAction.request)
-            } else {
-                logBlockedNavigation(url)
             }
             decisionHandler(.cancel)
             return
         }
 
         if navigationAction.targetFrame?.isMainFrame == true {
-            if configuration.urlPolicy.allows(url) {
+            if handleTopLevelNavigation(to: url) {
                 decisionHandler(.allow)
             } else {
-                logBlockedNavigation(url)
                 decisionHandler(.cancel)
             }
             return
@@ -112,10 +172,8 @@ final class BrowserController: NSObject, WKNavigationDelegate, WKUIDelegate {
             return nil
         }
 
-        if configuration.urlPolicy.allows(url) {
+        if handleTopLevelNavigation(to: url) {
             webView.load(navigationAction.request)
-        } else {
-            logBlockedNavigation(url)
         }
 
         return nil

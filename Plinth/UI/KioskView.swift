@@ -124,10 +124,11 @@ private struct AdministratorEscapePrompt: View {
     }
 }
 
-private struct StatusView: View {
+struct StatusView: View {
     let title: String
     let message: String?
     var showsProgress = false
+    var systemImage = "display"
 
     var body: some View {
         VStack(spacing: 16) {
@@ -135,7 +136,7 @@ private struct StatusView: View {
                 ProgressView()
                     .controlSize(.large)
             } else {
-                Image(systemName: "display")
+                Image(systemName: systemImage)
                     .font(.system(size: 36))
                     .foregroundStyle(.secondary)
             }
