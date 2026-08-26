@@ -63,7 +63,7 @@ run = "shellcheck packaging/scripts/*"
 
 [tasks.plist-lint]
 description = "Lint property lists"
-run = "plutil -lint Config/*.plist Plinth/Plinth.entitlements packaging/*.plist"
+run = "plutil -lint Config/*.plist Plinth/Plinth.entitlements packaging/root/Library/LaunchAgents/*.plist"
 
 [tasks.workflow-lint]
 description = "Lint GitHub Actions workflows"
