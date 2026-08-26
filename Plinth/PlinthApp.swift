@@ -7,12 +7,14 @@ struct PlinthApp: App {
     var body: some Scene {
         Window("Plinth", id: "kiosk") {
             KioskView(session: session)
+                .toolbarVisibility(.hidden, for: .windowToolbar)
+                .ignoresSafeArea(.container, edges: .top)
                 .windowDismissBehavior(.disabled)
                 .windowMinimizeBehavior(.disabled)
                 .windowResizeBehavior(.disabled)
                 .windowFullScreenBehavior(.disabled)
         }
-        .windowStyle(.hiddenTitleBar)
+        .windowStyle(.titleBar)
         .restorationBehavior(.disabled)
         .defaultLaunchBehavior(.presented)
         .commands {

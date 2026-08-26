@@ -21,10 +21,14 @@ final class KioskWindowView: NSView {
         }
 
         observeScreenParameters()
-        fitWindowToScreen()
 
         window.isMovable = false
         window.acceptsMouseMovedEvents = true
+        window.hasShadow = false
+        window.isOpaque = true
+        window.backgroundColor = .windowBackgroundColor
+
+        fitWindowToScreen()
     }
 
     deinit {
