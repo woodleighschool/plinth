@@ -6,13 +6,19 @@ Plinth runs web-based assessments and kiosk sessions on managed Macs. It stays i
 
 The `au.edu.vic.woodleigh.Plinth` defaults domain supports:
 
-| Key                | Type             | Behaviour                                                                     |
-| ------------------ | ---------------- | ----------------------------------------------------------------------------- |
-| `Enabled`          | Boolean          | Enters assessment mode only when true.                                        |
-| `StartURL`         | String           | Required absolute HTTPS URL.                                                  |
-| `AllowedHosts`     | Array of strings | Optional exact host and subdomain allowlist; defaults to the `StartURL` host. |
-| `IdleResetSeconds` | Integer          | Recreates the browser after inactivity; zero disables reset.                  |
-| `EphemeralSession` | Boolean          | Uses a non-persistent WebKit data store; defaults to true.                    |
+| Key                      | Type             | Behaviour                                                                     |
+| ------------------------ | ---------------- | ----------------------------------------------------------------------------- |
+| `Enabled`                | Boolean          | Enters assessment mode only when true.                                        |
+| `StartURL`               | String           | Required absolute HTTPS URL.                                                  |
+| `AllowedHosts`           | Array of strings | Optional exact host and subdomain allowlist; defaults to the `StartURL` host. |
+| `IdleResetSeconds`       | Integer          | Recreates the browser after inactivity; zero disables reset.                  |
+| `EphemeralSession`       | Boolean          | Uses a non-persistent WebKit data store; defaults to true.                    |
+| `DisplayScheduleEnabled` | Boolean          | Lets the app manage display sleep; defaults to false.                         |
+| `DisplayOnTime`          | String           | Required `HH:mm` local time when display scheduling is enabled.               |
+| `DisplayOffTime`         | String           | Required `HH:mm` local time when display scheduling is enabled.               |
+| `DisplayDays`            | Array of strings | Optional title-case weekday names for interval starts; defaults to weekdays.  |
+
+Display intervals include the on time and exclude the off time. An overnight interval belongs to the day on which it starts. Setting `Enabled` to false releases the power assertions and stops Plinth from controlling display sleep.
 
 ## 🧑‍💻 Development
 

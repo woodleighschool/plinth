@@ -12,6 +12,8 @@ nonisolated struct ManagedConfiguration: Equatable, Sendable {
         case invalidAllowedHosts
         case invalidIdleResetSeconds
         case invalidEphemeralSession
+        case invalidDisplayScheduleEnabled
+        case invalidDisplaySchedule
 
         var errorDescription: String? {
             switch self {
@@ -25,6 +27,10 @@ nonisolated struct ManagedConfiguration: Equatable, Sendable {
                 "IdleResetSeconds must be a non-negative integer."
             case .invalidEphemeralSession:
                 "EphemeralSession must be a Boolean."
+            case .invalidDisplayScheduleEnabled:
+                "DisplayScheduleEnabled must be a Boolean."
+            case .invalidDisplaySchedule:
+                "Display scheduling requires different HH:mm on/off times and one or more valid day names."
             }
         }
     }
@@ -33,6 +39,7 @@ nonisolated struct ManagedConfiguration: Equatable, Sendable {
     let urlPolicy: URLPolicy
     let idleResetSeconds: Int
     let ephemeralSession: Bool
+    let displaySchedule: DisplaySchedule?
 
     static func load(from defaults: UserDefaults) throws -> ManagedConfigurationState {
         guard defaults.object(forKey: "Enabled") as? Bool == true else {
@@ -96,12 +103,52 @@ nonisolated struct ManagedConfiguration: Equatable, Sendable {
             ephemeralSession = true
         }
 
+        let displaySchedule: DisplaySchedule?
+        if let value = defaults.object(forKey: "DisplayScheduleEnabled") {
+            guard let enabled = value as? Bool else {
+                throw ValidationError.invalidDisplayScheduleEnabled
+            }
+
+            if enabled {
+                guard let onTime = defaults.object(forKey: "DisplayOnTime") as? String,
+                      let offTime = defaults.object(forKey: "DisplayOffTime") as? String
+                else {
+                    throw ValidationError.invalidDisplaySchedule
+                }
+
+                let dayNames: [String]?
+                if let value = defaults.object(forKey: "DisplayDays") {
+                    guard let days = value as? [String] else {
+                        throw ValidationError.invalidDisplaySchedule
+                    }
+                    dayNames = days
+                } else {
+                    dayNames = nil
+                }
+
+                do {
+                    displaySchedule = try DisplaySchedule(
+                        onTime: onTime,
+                        offTime: offTime,
+                        dayNames: dayNames
+                    )
+                } catch {
+                    throw ValidationError.invalidDisplaySchedule
+                }
+            } else {
+                displaySchedule = nil
+            }
+        } else {
+            displaySchedule = nil
+        }
+
         return .enabled(
             ManagedConfiguration(
                 startURL: startURL,
                 urlPolicy: urlPolicy,
                 idleResetSeconds: idleResetSeconds,
-                ephemeralSession: ephemeralSession
+                ephemeralSession: ephemeralSession,
+                displaySchedule: displaySchedule
             )
         )
     }

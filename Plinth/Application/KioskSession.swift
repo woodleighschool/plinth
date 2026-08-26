@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Observation
 import OSLog
@@ -8,6 +9,7 @@ final class KioskSession {
     enum Presentation: Equatable {
         case startup
         case maintenance
+        case scheduledOff
         case configurationError(String)
         case unavailable
         case browser(BrowserPresentation)
@@ -20,7 +22,15 @@ final class KioskSession {
 
     private enum InactivePresentation {
         case maintenance
+        case scheduledOff
         case configurationError(String)
+        case unavailable
+    }
+
+    private enum SchedulePhase: Equatable {
+        case unmanaged
+        case active
+        case inactive
     }
 
     private static let configurationRefreshInterval = Duration.seconds(30)
@@ -32,14 +42,20 @@ final class KioskSession {
 
     private let defaults: UserDefaults
     private let assessmentController: AssessmentController
+    private let powerController = PowerController()
     private let activityMonitor = IdleActivityMonitor()
     private let clock = ContinuousClock()
 
+    private var configuredConfiguration: ManagedConfiguration?
     private var desiredConfiguration: ManagedConfiguration?
     private var inactivePresentation = InactivePresentation.maintenance
+    private var schedulePhase = SchedulePhase.unmanaged
     private var beginAttempts = 0
     private var lastActivity = ContinuousClock.now
     private var retryTask: Task<Void, Never>?
+    private var scheduleBoundaryTask: Task<Void, Never>?
+    private var displaySleepTask: Task<Void, Never>?
+    private var displaySleepRequestID: UUID?
 
     #if DEBUG
         private let runsUnlocked = CommandLine.arguments.contains("--unlocked")
@@ -66,6 +82,9 @@ final class KioskSession {
         defer {
             activityMonitor.stop()
             retryTask?.cancel()
+            scheduleBoundaryTask?.cancel()
+            cancelDisplaySleepRequest()
+            powerController.disableScheduling()
         }
 
         refreshConfiguration()
@@ -76,6 +95,9 @@ final class KioskSession {
             }
             group.addTask { [weak self] in
                 await self?.monitorIdleTimeout()
+            }
+            group.addTask { [weak self] in
+                await self?.monitorScheduleEvents()
             }
             await group.waitForAll()
         }
@@ -113,13 +135,73 @@ final class KioskSession {
         }
     }
 
+    private func monitorScheduleEvents() async {
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { [weak self] in
+                await self?.monitorClockChanges()
+            }
+            group.addTask { [weak self] in
+                await self?.monitorTimeZoneChanges()
+            }
+            group.addTask { [weak self] in
+                await self?.monitorSystemWake()
+            }
+            group.addTask { [weak self] in
+                await self?.monitorScreenWake()
+            }
+            await group.waitForAll()
+        }
+    }
+
+    private func monitorClockChanges() async {
+        for await _ in NotificationCenter.default.notifications(
+            named: NSNotification.Name.NSSystemClockDidChange
+        ) {
+            guard !Task.isCancelled else { return }
+            reconcileConfiguredKiosk(rearmBoundary: true)
+        }
+    }
+
+    private func monitorTimeZoneChanges() async {
+        for await _ in NotificationCenter.default.notifications(
+            named: NSNotification.Name.NSSystemTimeZoneDidChange
+        ) {
+            guard !Task.isCancelled else { return }
+            reconcileConfiguredKiosk(rearmBoundary: true)
+        }
+    }
+
+    private func monitorSystemWake() async {
+        for await _ in NSWorkspace.shared.notificationCenter.notifications(
+            named: NSWorkspace.didWakeNotification
+        ) {
+            guard !Task.isCancelled else { return }
+            reconcileConfiguredKiosk(rearmBoundary: true, wokeSystem: true)
+        }
+    }
+
+    private func monitorScreenWake() async {
+        for await _ in NSWorkspace.shared.notificationCenter.notifications(
+            named: NSWorkspace.screensDidWakeNotification
+        ) {
+            guard !Task.isCancelled else { return }
+            screenDidWake()
+        }
+    }
+
     private func refreshConfiguration() {
         do {
             switch try ManagedConfiguration.load(from: defaults) {
             case .disabled:
                 disableKiosk(for: .maintenance)
             case let .enabled(configuration):
-                enableKiosk(with: configuration)
+                let changed = configuredConfiguration != configuration
+                configuredConfiguration = configuration
+                if changed {
+                    beginAttempts = 0
+                    retryTask?.cancel()
+                }
+                reconcileConfiguredKiosk(rearmBoundary: changed)
             }
         } catch {
             Log.configuration.error("Managed configuration is invalid: \(error.localizedDescription, privacy: .public)")
@@ -127,25 +209,80 @@ final class KioskSession {
         }
     }
 
-    private func enableKiosk(with configuration: ManagedConfiguration) {
-        if desiredConfiguration == configuration {
+    private func reconcileConfiguredKiosk(
+        rearmBoundary: Bool,
+        wokeSystem: Bool = false
+    ) {
+        guard let configuration = configuredConfiguration else {
             return
         }
 
+        guard let schedule = configuration.displaySchedule else {
+            scheduleBoundaryTask?.cancel()
+            scheduleBoundaryTask = nil
+            powerController.disableScheduling()
+            activateKiosk(with: configuration, scheduled: false)
+            return
+        }
+
+        if rearmBoundary || scheduleBoundaryTask == nil {
+            armScheduleBoundary(for: schedule)
+        }
+
+        do {
+            try powerController.enableScheduling()
+        } catch {
+            handleSystemPowerFailure(error)
+            return
+        }
+
+        let calendar = Calendar.autoupdatingCurrent
+        if schedule.isActive(at: .now, calendar: calendar) {
+            activateKiosk(with: configuration, scheduled: true)
+            if wokeSystem, case .browser = presentation {
+                prepareScheduledDisplay()
+            }
+        } else {
+            deactivateKioskForSchedule(forceDisplaySleep: wokeSystem)
+        }
+    }
+
+    private func activateKiosk(
+        with configuration: ManagedConfiguration,
+        scheduled: Bool
+    ) {
+        let newPhase: SchedulePhase = scheduled ? .active : .unmanaged
+        let phaseChanged = schedulePhase != newPhase
+        schedulePhase = newPhase
+        cancelDisplaySleepRequest()
+
+        let configurationChanged = desiredConfiguration != configuration
         desiredConfiguration = configuration
-        beginAttempts = 0
-        retryTask?.cancel()
+        if phaseChanged || configurationChanged {
+            beginAttempts = 0
+            retryTask?.cancel()
+        }
 
         #if DEBUG
             if runsUnlocked {
                 Log.assessment.notice("Running in DEBUG unlocked mode")
-                showBrowser(using: configuration)
+                if scheduled, phaseChanged || !showsBrowser {
+                    guard prepareScheduledDisplay() else {
+                        return
+                    }
+                }
+                if phaseChanged || configurationChanged || !showsBrowser {
+                    showBrowser(using: configuration)
+                }
                 return
             }
         #endif
 
         if assessmentController.hasSession {
-            if case .browser = presentation {
+            if scheduled, phaseChanged, !prepareScheduledDisplay() {
+                return
+            }
+            if configurationChanged, case .browser = presentation {
                 showBrowser(using: configuration)
             }
             return
@@ -154,11 +291,49 @@ final class KioskSession {
         beginAssessment()
     }
 
-    private func disableKiosk(for inactivePresentation: InactivePresentation) {
+    private func deactivateKioskForSchedule(forceDisplaySleep: Bool) {
+        let phaseChanged = schedulePhase != .inactive
+        schedulePhase = .inactive
         desiredConfiguration = nil
-        self.inactivePresentation = inactivePresentation
+        inactivePresentation = .scheduledOff
         beginAttempts = 0
         retryTask?.cancel()
+        presentation = .startup
+        powerController.allowDisplaySleep()
+
+        #if DEBUG
+            if runsUnlocked {
+                showInactivePresentation()
+                if phaseChanged || forceDisplaySleep {
+                    requestDisplaySleep()
+                }
+                return
+            }
+        #endif
+
+        if assessmentController.hasSession {
+            if phaseChanged {
+                assessmentController.end()
+            }
+        } else {
+            showInactivePresentation()
+            if phaseChanged || forceDisplaySleep {
+                requestDisplaySleep()
+            }
+        }
+    }
+
+    private func disableKiosk(for inactivePresentation: InactivePresentation) {
+        configuredConfiguration = nil
+        desiredConfiguration = nil
+        self.inactivePresentation = inactivePresentation
+        schedulePhase = .unmanaged
+        beginAttempts = 0
+        retryTask?.cancel()
+        scheduleBoundaryTask?.cancel()
+        scheduleBoundaryTask = nil
+        cancelDisplaySleepRequest()
+        powerController.disableScheduling()
         presentation = .startup
 
         #if DEBUG
@@ -173,6 +348,119 @@ final class KioskSession {
         } else {
             showInactivePresentation()
         }
+    }
+
+    private func armScheduleBoundary(for schedule: DisplaySchedule) {
+        scheduleBoundaryTask?.cancel()
+        guard let boundary = schedule.nextBoundary(
+            after: .now,
+            calendar: .autoupdatingCurrent
+        ) else {
+            scheduleBoundaryTask = nil
+            return
+        }
+
+        let delay = max(0, boundary.timeIntervalSinceNow)
+        scheduleBoundaryTask = Task { @concurrent [weak self] in
+            do {
+                try await Task.sleep(for: .seconds(delay))
+            } catch {
+                return
+            }
+            await self?.scheduleBoundaryReached(schedule)
+        }
+    }
+
+    private func scheduleBoundaryReached(_ schedule: DisplaySchedule) {
+        guard configuredConfiguration?.displaySchedule == schedule else {
+            return
+        }
+        reconcileConfiguredKiosk(rearmBoundary: true)
+    }
+
+    private func screenDidWake() {
+        guard schedulePhase == .inactive else {
+            return
+        }
+        requestDisplaySleep()
+    }
+
+    @discardableResult
+    private func prepareScheduledDisplay() -> Bool {
+        do {
+            try powerController.wakeDisplay()
+            return true
+        } catch {
+            Log.power.error("Could not prepare the scheduled display: \(error.localizedDescription, privacy: .public)")
+            presentation = .unavailable
+            powerController.allowDisplaySleep()
+
+            #if DEBUG
+                if runsUnlocked {
+                    return false
+                }
+            #endif
+
+            assessmentController.end()
+            return false
+        }
+    }
+
+    private func handleSystemPowerFailure(_ error: any Error) {
+        Log.power.error("Could not enable managed display scheduling: \(error.localizedDescription, privacy: .public)")
+        desiredConfiguration = nil
+        inactivePresentation = .unavailable
+        schedulePhase = .unmanaged
+        retryTask?.cancel()
+        powerController.disableScheduling()
+        presentation = .startup
+
+        if assessmentController.hasSession {
+            assessmentController.end()
+        } else {
+            showInactivePresentation()
+        }
+    }
+
+    private func requestDisplaySleep() {
+        guard displaySleepTask == nil else {
+            return
+        }
+
+        let requestID = UUID()
+        displaySleepRequestID = requestID
+        displaySleepTask = Task { [weak self] in
+            guard let self else {
+                return
+            }
+
+            do {
+                try await powerController.sleepDisplay()
+                displaySleepFinished(requestID: requestID, error: nil)
+            } catch {
+                displaySleepFinished(requestID: requestID, error: error)
+            }
+        }
+    }
+
+    private func displaySleepFinished(requestID: UUID, error: (any Error)?) {
+        guard displaySleepRequestID == requestID else {
+            return
+        }
+
+        displaySleepTask = nil
+        displaySleepRequestID = nil
+        if let error, schedulePhase == .inactive {
+            Log.power.error("Could not sleep the display: \(error.localizedDescription, privacy: .public)")
+        } else if error == nil {
+            Log.power.info("Display slept outside managed display hours")
+        }
+    }
+
+    private func cancelDisplaySleepRequest() {
+        displaySleepRequestID = nil
+        displaySleepTask?.cancel()
+        displaySleepTask = nil
     }
 
     private func beginAssessment() {
@@ -229,12 +517,24 @@ final class KioskSession {
         }
     }
 
+    private var showsBrowser: Bool {
+        if case .browser = presentation {
+            true
+        } else {
+            false
+        }
+    }
+
     private func showInactivePresentation() {
         switch inactivePresentation {
         case .maintenance:
             presentation = .maintenance
+        case .scheduledOff:
+            presentation = .scheduledOff
         case let .configurationError(message):
             presentation = .configurationError(message)
+        case .unavailable:
+            presentation = .unavailable
         }
     }
 }
@@ -246,6 +546,11 @@ extension KioskSession: AssessmentControllerDelegate {
             return
         }
 
+        if desiredConfiguration.displaySchedule != nil,
+           !prepareScheduledDisplay()
+        {
+            return
+        }
         beginAttempts = 0
         showBrowser(using: desiredConfiguration)
     }
@@ -253,6 +558,9 @@ extension KioskSession: AssessmentControllerDelegate {
     func assessmentFailedToBegin(with _: any Error) {
         if desiredConfiguration == nil {
             showInactivePresentation()
+            if schedulePhase == .inactive {
+                requestDisplaySleep()
+            }
         } else {
             presentation = .unavailable
             scheduleAssessmentRetry()
@@ -260,14 +568,23 @@ extension KioskSession: AssessmentControllerDelegate {
     }
 
     func assessmentWasInterrupted(with _: any Error) {
-        presentation = .unavailable
+        if desiredConfiguration == nil {
+            showInactivePresentation()
+        } else {
+            presentation = .unavailable
+        }
         assessmentController.end()
     }
 
     func assessmentDidEnd() {
+        if schedulePhase == .inactive {
+            showInactivePresentation()
+            requestDisplaySleep()
+            return
+        }
+
         if desiredConfiguration != nil {
-            beginAttempts = 0
-            beginAssessment()
+            scheduleAssessmentRetry()
         } else {
             showInactivePresentation()
         }

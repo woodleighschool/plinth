@@ -17,6 +17,11 @@ struct KioskView: View {
                     title: "Assessment browser disabled for maintenance",
                     message: "An administrator can re-enable this Mac through managed settings."
                 )
+            case .scheduledOff:
+                StatusView(
+                    title: "Assessment browser outside managed display hours",
+                    message: "It will resume automatically at the next scheduled time."
+                )
             case let .configurationError(message):
                 StatusView(
                     title: "Assessment browser configuration error",

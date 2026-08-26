@@ -7,4 +7,5 @@ nonisolated enum Log {
     static let assessment = Logger(subsystem: subsystem, category: "assessment")
     static let browser = Logger(subsystem: subsystem, category: "browser")
     static let configuration = Logger(subsystem: subsystem, category: "configuration")
+    static let power = Logger(subsystem: subsystem, category: "power")
 }
