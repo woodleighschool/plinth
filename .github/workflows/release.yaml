@@ -32,6 +32,7 @@ jobs:
           persist-credentials: false
 
       - name: Import Developer ID Application certificate
+        id: application-certificate
         uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7
         with:
           p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_P12_BASE64 }}
@@ -50,9 +51,11 @@ jobs:
         run: xcodebuild -version
 
       - name: Validate release version
+        id: release
         run: |
           VERSION="${RELEASE_TAG#v}"
           grep -Fqx "MARKETING_VERSION = ${VERSION} // x-release-please-version" Config/Version.xcconfig
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
 
       - name: Archive app
         run: |
@@ -76,68 +79,23 @@ jobs:
             -exportPath "${RUNNER_TEMP}/export" \
             -exportOptionsPlist Config/ExportOptions.plist
 
-      - name: Notarize app
-        uses: woodleighschool/.github/actions/apple-notarize@a85ca6bcf210fe5e22e50da1d832f211c2b44605 # apple-notarize-v2.0.0
-        with:
-          product-path: ${{ runner.temp }}/export/${{ env.APP_NAME }}.app
-          issuer-id: ${{ vars.APPSTORE_ISSUER_ID }}
-          api-key-id: ${{ vars.APPSTORE_API_KEY_ID }}
-          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
-
-      - name: Verify app
-        run: |
-          APP_PATH="${RUNNER_TEMP}/export/${APP_NAME}.app"
-
-          codesign --verify --deep --strict --verbose=2 "${APP_PATH}"
-          spctl --assess --type execute --verbose=2 "${APP_PATH}"
-
       - name: Import Developer ID Installer certificate
         uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7
         with:
+          create-keychain: false
+          keychain-password: ${{ steps.application-certificate.outputs.keychain-password }}
           p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_P12_BASE64 }}
           p12-password: ${{ secrets.APPLE_DEVELOPER_ID_P12_PASSWORD }}
 
-      - name: Build and sign package
+      - name: Build package
         id: package
-        run: |
-          set -euo pipefail
-
-          VERSION="${RELEASE_TAG#v}"
-          PAYLOAD="${RUNNER_TEMP}/payload"
-          PKG_PATH="${GITHUB_WORKSPACE}/dist/${APP_NAME}-${VERSION}.pkg"
-
-          mkdir -p \
-            "${PAYLOAD}/Applications" \
-            "${PAYLOAD}/Library/LaunchAgents" \
-            dist
-
-          ditto --norsrc \
-            "${RUNNER_TEMP}/export/${APP_NAME}.app" \
-            "${PAYLOAD}/Applications/${APP_NAME}.app"
-
-          install -m 0644 \
-            packaging/au.edu.vic.woodleigh.Plinth.plist \
-            "${PAYLOAD}/Library/LaunchAgents/au.edu.vic.woodleigh.Plinth.plist"
-
-          xattr -cr "${PAYLOAD}"
-          codesign --verify --deep --strict --verbose=2 \
-            "${PAYLOAD}/Applications/${APP_NAME}.app"
-
-          pkgbuild \
-            --root "${PAYLOAD}" \
-            --scripts packaging/scripts \
-            --identifier au.edu.vic.woodleigh.Plinth \
-            --version "${VERSION}" \
-            --install-location / \
-            --sign "${PKG_SIGNING_IDENTITY}" \
-            "${PKG_PATH}"
-
-          if pkgutil --payload-files "${PKG_PATH}" | grep -Eq '(^|/)\._'; then
-            echo "Package contains AppleDouble metadata" >&2
-            exit 1
-          fi
-
-          echo "path=${PKG_PATH}" >> "${GITHUB_OUTPUT}"
+        uses: woodleighschool/.github/actions/apple-pkg@583bc37748899a9154880b1c538b15cf46b5b05d # apple-pkg-v1.0.0
+        with:
+          app: ${{ runner.temp }}/export/${{ env.APP_NAME }}.app
+          identifier: au.edu.vic.woodleigh.Plinth
+          version: ${{ steps.release.outputs.version }}
+          signing-identity: ${{ env.PKG_SIGNING_IDENTITY }}
+          output: dist/${{ env.APP_NAME }}-${{ steps.release.outputs.version }}.pkg
 
       - name: Notarize package
         uses: woodleighschool/.github/actions/apple-notarize@a85ca6bcf210fe5e22e50da1d832f211c2b44605 # apple-notarize-v2.0.0
