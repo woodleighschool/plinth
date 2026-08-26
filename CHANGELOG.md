@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.4](https://github.com/woodleighschool/plinth/compare/0.1.3...0.1.4) (2026-08-26)
+
+
+### Features
+
+* add administrator escape hatch ([9ee5166](https://github.com/woodleighschool/plinth/commit/9ee5166afad61c55fa925a0f1967f5a94d52bb57))
+* add managed display scheduling ([9aa38f9](https://github.com/woodleighschool/plinth/commit/9aa38f97e5f42f3997169e0278b9a8db99d768d5))
+
 ## [0.1.3](https://github.com/woodleighschool/plinth/compare/0.1.2...0.1.3) (2026-08-26)
 
 
