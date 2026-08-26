@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.3](https://github.com/woodleighschool/plinth/compare/0.1.2...0.1.3) (2026-08-26)
+
+
+### Bug Fixes
+
+* **ci:** lint package root plists ([89dc2ed](https://github.com/woodleighschool/plinth/commit/89dc2ed4814c89a576f7d83f381d2530cdd8bb25))
+
+
+### Continuous Integration
+
+* **release:** use shared package action ([0696498](https://github.com/woodleighschool/plinth/commit/0696498f63e9273b092cba9da00f50dd81fb36f1))
+
+
+### Miscellaneous Chores
+
+* **mise:** update tool oxfmt (0.64.0 → 0.65.0) ([#2](https://github.com/woodleighschool/plinth/issues/2)) ([4435e5d](https://github.com/woodleighschool/plinth/commit/4435e5de83746d631491b936e4170db47218a8d4))
+
 ## [0.1.2](https://github.com/woodleighschool/plinth/compare/0.1.1...0.1.2) (2026-08-26)
 
 
