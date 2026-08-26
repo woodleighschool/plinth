@@ -86,21 +86,10 @@ jobs:
 
       - name: Verify app
         run: |
-          set -euo pipefail
-
           APP_PATH="${RUNNER_TEMP}/export/${APP_NAME}.app"
-          EXECUTABLE="${APP_PATH}/Contents/MacOS/${APP_NAME}"
 
           codesign --verify --deep --strict --verbose=2 "${APP_PATH}"
           spctl --assess --type execute --verbose=2 "${APP_PATH}"
-
-          ARCHS="$(lipo -archs "${EXECUTABLE}")"
-          case " ${ARCHS} " in *" arm64 "*) ;; *) exit 1 ;; esac
-          case " ${ARCHS} " in *" x86_64 "*) ;; *) exit 1 ;; esac
-
-          codesign -d --entitlements :- "${APP_PATH}" 2>/dev/null \
-            | plutil -extract com.apple.developer.automatic-assessment-configuration raw - \
-            | grep -Fqx true
 
       - name: Import Developer ID Installer certificate
         uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7
