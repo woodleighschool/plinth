@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.5](https://github.com/woodleighschool/plinth/compare/0.1.4...0.1.5) (2026-08-26)
+
+
+### Bug Fixes
+
+* correct focus ([72e7f42](https://github.com/woodleighschool/plinth/commit/72e7f420a93a1a5b2d9b4c338455c629dd2b9e2c))
+* **kiosk:** handle blocked navigation and resize ([44a12cc](https://github.com/woodleighschool/plinth/commit/44a12cc8ab1108b7450f2be399dc3c5ec9cda443))
+* **kiosk:** use native administrator exit alert ([93b204c](https://github.com/woodleighschool/plinth/commit/93b204c1c0cdf7043c4f4e5e939bf4420a55cf1d))
+
 ## [0.1.4](https://github.com/woodleighschool/plinth/compare/0.1.3...0.1.4) (2026-08-26)
 
 
