@@ -9,41 +9,26 @@ struct WindowConfigurator: NSViewRepresentable {
     func updateNSView(_: KioskWindowView, context _: Context) {}
 }
 
-final class KioskWindowView: NSView, NSWindowDelegate {
+final class KioskWindowView: NSView {
     private var observesScreenParameters = false
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
 
         guard let window else {
+            stopObservingScreenParameters()
             return
         }
 
         observeScreenParameters()
-
-        window.delegate = self
-        window.title = "Plinth"
-        window.styleMask = [.borderless]
-        window.level = .normal
-        window.isMovable = false
-        window.isMovableByWindowBackground = false
-        window.acceptsMouseMovedEvents = true
-        window.collectionBehavior.remove(.fullScreenPrimary)
-
         fitWindowToScreen()
-        window.makeKeyAndOrderFront(nil)
+
+        window.isMovable = false
+        window.acceptsMouseMovedEvents = true
     }
 
     deinit {
         NotificationCenter.default.removeObserver(self)
-    }
-
-    func windowShouldClose(_: NSWindow) -> Bool {
-        false
-    }
-
-    func windowDidChangeScreen(_: Notification) {
-        fitWindowToScreen()
     }
 
     @objc private func screenParametersDidChange(_: Notification) {
@@ -62,6 +47,19 @@ final class KioskWindowView: NSView, NSWindowDelegate {
             object: nil
         )
         observesScreenParameters = true
+    }
+
+    private func stopObservingScreenParameters() {
+        guard observesScreenParameters else {
+            return
+        }
+
+        NotificationCenter.default.removeObserver(
+            self,
+            name: NSApplication.didChangeScreenParametersNotification,
+            object: nil
+        )
+        observesScreenParameters = false
     }
 
     private func fitWindowToScreen() {
