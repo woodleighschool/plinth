@@ -36,6 +36,13 @@ final class LocalEventMonitor {
             ]
         ) { event in
             onActivity()
+
+            // AAC leaves macOS context menus to the assessment app. Consume secondary clicks
+            // before WebKit can expose Look Up, Translate, sharing, or other system services.
+            if event.type == .rightMouseDown {
+                return nil
+            }
+
             if event.type == .keyDown,
                Self.isAdministratorEscape(
                    characters: event.charactersIgnoringModifiers,

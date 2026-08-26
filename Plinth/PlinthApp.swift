@@ -1,27 +1,16 @@
-import SwiftUI
+import AppKit
 
 @main
-struct PlinthApp: App {
-    @State private var session = KioskSession()
+enum PlinthApp {
+    @MainActor
+    static func main() {
+        let application = NSApplication.shared
+        let delegate = AppDelegate()
+        application.delegate = delegate
+        application.setActivationPolicy(.regular)
 
-    var body: some Scene {
-        Window("Plinth", id: "kiosk") {
-            KioskView(session: session)
-                .windowDismissBehavior(.disabled)
-                .windowMinimizeBehavior(.disabled)
-                .windowResizeBehavior(.disabled)
-                .windowFullScreenBehavior(.disabled)
-        }
-        .windowStyle(.hiddenTitleBar)
-        .restorationBehavior(.disabled)
-        .defaultLaunchBehavior(.presented)
-        .commands {
-            CommandGroup(replacing: .appSettings) {}
-            CommandGroup(replacing: .appTermination) {}
-            CommandGroup(replacing: .newItem) {}
-            CommandGroup(replacing: .saveItem) {}
-            CommandGroup(replacing: .printItem) {}
-            CommandGroup(replacing: .importExport) {}
+        withExtendedLifetime(delegate) {
+            application.run()
         }
     }
 }

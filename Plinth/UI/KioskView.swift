@@ -41,9 +41,6 @@ struct KioskView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(.background)
-        .background {
-            WindowConfigurator()
-        }
         .task {
             await session.run()
         }

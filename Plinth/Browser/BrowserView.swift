@@ -63,7 +63,7 @@ private struct ManagedWebView: NSViewRepresentable {
             ? .nonPersistent()
             : .default()
 
-        let webView = KioskWebView(
+        let webView = WKWebView(
             frame: .zero,
             configuration: webConfiguration
         )
@@ -83,12 +83,6 @@ private struct ManagedWebView: NSViewRepresentable {
         webView.stopLoading()
         webView.navigationDelegate = nil
         webView.uiDelegate = nil
-    }
-}
-
-final class KioskWebView: WKWebView {
-    override func menu(for _: NSEvent) -> NSMenu? {
-        nil
     }
 }
 
