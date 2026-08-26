@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/woodleighschool/plinth/compare/0.1.5...0.1.6) (2026-08-26)
+
+
+### Miscellaneous Chores
+
+* really fullscreen, minus menubar ([b5c4cde](https://github.com/woodleighschool/plinth/commit/b5c4cde5a45ae10496a22f8a1876003b0e31dfa7))
+
 ## [0.1.5](https://github.com/woodleighschool/plinth/compare/0.1.4...0.1.5) (2026-08-26)
 
 
