@@ -39,13 +39,16 @@ final class KioskSession {
     private static let maximumBeginAttempts = 3
 
     private(set) var presentation = Presentation.startup
+    private(set) var presentsAdministratorEscape = false
 
     private let defaults: UserDefaults
     private let assessmentController: AssessmentController
     private let powerController = PowerController()
-    private let activityMonitor = IdleActivityMonitor()
+    private let eventMonitor = LocalEventMonitor()
     private let clock = ContinuousClock()
 
+    private var administratorEscapeCode: String?
+    private var exitsForAdministrator = false
     private var configuredConfiguration: ManagedConfiguration?
     private var desiredConfiguration: ManagedConfiguration?
     private var inactivePresentation = InactivePresentation.maintenance
@@ -76,11 +79,16 @@ final class KioskSession {
         ) as? String ?? "unknown"
         Log.app.info("Plinth launched, version \(version, privacy: .public)")
 
-        activityMonitor.start { [weak self] in
-            self?.lastActivity = .now
-        }
+        eventMonitor.start(
+            onActivity: { [weak self] in
+                self?.lastActivity = .now
+            },
+            onAdministratorEscape: { [weak self] in
+                self?.presentAdministratorEscape() ?? false
+            }
+        )
         defer {
-            activityMonitor.stop()
+            eventMonitor.stop()
             retryTask?.cancel()
             scheduleBoundaryTask?.cancel()
             cancelDisplaySleepRequest()
@@ -190,6 +198,17 @@ final class KioskSession {
     }
 
     private func refreshConfiguration() {
+        guard !exitsForAdministrator else {
+            return
+        }
+
+        administratorEscapeCode = ManagedConfiguration.administratorEscapeCode(
+            from: defaults
+        )
+        if administratorEscapeCode == nil {
+            presentsAdministratorEscape = false
+        }
+
         do {
             switch try ManagedConfiguration.load(from: defaults) {
             case .disabled:
@@ -213,7 +232,9 @@ final class KioskSession {
         rearmBoundary: Bool,
         wokeSystem: Bool = false
     ) {
-        guard let configuration = configuredConfiguration else {
+        guard !exitsForAdministrator,
+              let configuration = configuredConfiguration
+        else {
             return
         }
 
@@ -463,6 +484,61 @@ final class KioskSession {
         displaySleepTask = nil
     }
 
+    func presentAdministratorEscape() -> Bool {
+        guard administratorEscapeCode != nil,
+              !exitsForAdministrator
+        else {
+            return false
+        }
+
+        presentsAdministratorEscape = true
+        return true
+    }
+
+    func dismissAdministratorEscape() {
+        guard !exitsForAdministrator else {
+            return
+        }
+        presentsAdministratorEscape = false
+    }
+
+    func submitAdministratorEscapeCode(_ code: String) -> Bool {
+        guard presentsAdministratorEscape,
+              code == administratorEscapeCode
+        else {
+            return false
+        }
+
+        beginAdministratorExit()
+        return true
+    }
+
+    private func beginAdministratorExit() {
+        presentsAdministratorEscape = false
+        presentation = .startup
+        exitsForAdministrator = true
+        administratorEscapeCode = nil
+        configuredConfiguration = nil
+        desiredConfiguration = nil
+        schedulePhase = .unmanaged
+        beginAttempts = 0
+        retryTask?.cancel()
+        scheduleBoundaryTask?.cancel()
+        scheduleBoundaryTask = nil
+        cancelDisplaySleepRequest()
+
+        if assessmentController.hasSession {
+            assessmentController.end()
+        } else {
+            completeAdministratorExit()
+        }
+    }
+
+    private func completeAdministratorExit() {
+        powerController.disableScheduling()
+        NSApplication.shared.terminate(nil)
+    }
+
     private func beginAssessment() {
         guard desiredConfiguration != nil,
               !assessmentController.hasSession,
@@ -541,6 +617,11 @@ final class KioskSession {
 
 extension KioskSession: AssessmentControllerDelegate {
     func assessmentDidBegin() {
+        if exitsForAdministrator {
+            assessmentController.end()
+            return
+        }
+
         guard let desiredConfiguration else {
             assessmentController.end()
             return
@@ -556,6 +637,11 @@ extension KioskSession: AssessmentControllerDelegate {
     }
 
     func assessmentFailedToBegin(with _: any Error) {
+        if exitsForAdministrator {
+            completeAdministratorExit()
+            return
+        }
+
         if desiredConfiguration == nil {
             showInactivePresentation()
             if schedulePhase == .inactive {
@@ -568,6 +654,11 @@ extension KioskSession: AssessmentControllerDelegate {
     }
 
     func assessmentWasInterrupted(with _: any Error) {
+        if exitsForAdministrator {
+            assessmentController.end()
+            return
+        }
+
         if desiredConfiguration == nil {
             showInactivePresentation()
         } else {
@@ -577,6 +668,11 @@ extension KioskSession: AssessmentControllerDelegate {
     }
 
     func assessmentDidEnd() {
+        if exitsForAdministrator {
+            completeAdministratorExit()
+            return
+        }
+
         if schedulePhase == .inactive {
             showInactivePresentation()
             requestDisplaySleep()

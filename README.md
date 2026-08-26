@@ -17,6 +17,7 @@ The `au.edu.vic.woodleigh.Plinth` defaults domain supports:
 | `DisplayOnTime`          | String           | Required `HH:mm` local time when display scheduling is enabled.               |
 | `DisplayOffTime`         | String           | Required `HH:mm` local time when display scheduling is enabled.               |
 | `DisplayDays`            | Array of strings | Optional title-case weekday names for interval starts; defaults to weekdays.  |
+| `EscapeCode`             | String           | Enables administrator exit with Control-Option-Command-E when non-empty.      |
 
 Display intervals include the on time and exclude the off time. An overnight interval belongs to the day on which it starts. Setting `Enabled` to false releases the power assertions and stops Plinth from controlling display sleep.
 

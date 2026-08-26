@@ -41,6 +41,15 @@ nonisolated struct ManagedConfiguration: Equatable, Sendable {
     let ephemeralSession: Bool
     let displaySchedule: DisplaySchedule?
 
+    static func administratorEscapeCode(from defaults: UserDefaults) -> String? {
+        guard let code = defaults.object(forKey: "EscapeCode") as? String,
+              !code.isEmpty
+        else {
+            return nil
+        }
+        return code
+    }
+
     static func load(from defaults: UserDefaults) throws -> ManagedConfigurationState {
         guard defaults.object(forKey: "Enabled") as? Bool == true else {
             return .disabled

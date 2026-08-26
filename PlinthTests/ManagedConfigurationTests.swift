@@ -179,6 +179,33 @@ struct ManagedConfigurationTests {
         #expect(try #require(state.configuration).displaySchedule == nil)
     }
 
+    @Test func loadsAdministratorEscapeCodeVerbatim() {
+        let defaults = makeDefaults()
+        defaults.set(" 0274 ", forKey: "EscapeCode")
+
+        #expect(
+            ManagedConfiguration.administratorEscapeCode(from: defaults) ==
+                " 0274 "
+        )
+    }
+
+    @Test func missingOrEmptyAdministratorEscapeCodeDisablesEscape() {
+        let defaults = makeDefaults()
+
+        #expect(ManagedConfiguration.administratorEscapeCode(from: defaults) == nil)
+
+        defaults.set("", forKey: "EscapeCode")
+
+        #expect(ManagedConfiguration.administratorEscapeCode(from: defaults) == nil)
+    }
+
+    @Test func nonStringAdministratorEscapeCodeDisablesEscape() {
+        let defaults = makeDefaults()
+        defaults.set(274, forKey: "EscapeCode")
+
+        #expect(ManagedConfiguration.administratorEscapeCode(from: defaults) == nil)
+    }
+
     private func enabledDefaults(startURL: String) -> UserDefaults {
         let defaults = makeDefaults()
         defaults.set(true, forKey: "Enabled")
