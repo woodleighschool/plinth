@@ -6,6 +6,19 @@ nonisolated enum ManagedConfigurationState: Equatable, Sendable {
 }
 
 nonisolated struct ManagedConfiguration: Equatable, Sendable {
+    enum Key: String, CaseIterable, Sendable {
+        case enabled = "Enabled"
+        case startURL = "StartURL"
+        case allowedHosts = "AllowedHosts"
+        case idleResetSeconds = "IdleResetSeconds"
+        case ephemeralSession = "EphemeralSession"
+        case displayScheduleEnabled = "DisplayScheduleEnabled"
+        case displayOnTime = "DisplayOnTime"
+        case displayOffTime = "DisplayOffTime"
+        case displayDays = "DisplayDays"
+        case escapeCode = "EscapeCode"
+    }
+
     enum ValidationError: Error, Equatable, LocalizedError {
         case missingStartURL
         case invalidStartURL
@@ -42,7 +55,7 @@ nonisolated struct ManagedConfiguration: Equatable, Sendable {
     let displaySchedule: DisplaySchedule?
 
     static func administratorEscapeCode(from defaults: UserDefaults) -> String? {
-        guard let code = defaults.object(forKey: "EscapeCode") as? String,
+        guard let code = defaults.object(forKey: Key.escapeCode.rawValue) as? String,
               !code.isEmpty
         else {
             return nil
@@ -51,11 +64,11 @@ nonisolated struct ManagedConfiguration: Equatable, Sendable {
     }
 
     static func load(from defaults: UserDefaults) throws -> ManagedConfigurationState {
-        guard defaults.object(forKey: "Enabled") as? Bool == true else {
+        guard defaults.object(forKey: Key.enabled.rawValue) as? Bool == true else {
             return .disabled
         }
 
-        guard let startURLValue = defaults.object(forKey: "StartURL") as? String else {
+        guard let startURLValue = defaults.object(forKey: Key.startURL.rawValue) as? String else {
             throw ValidationError.missingStartURL
         }
         guard let startURL = URL(string: startURLValue),
@@ -66,7 +79,7 @@ nonisolated struct ManagedConfiguration: Equatable, Sendable {
         }
 
         let configuredHosts: [String]
-        if let value = defaults.object(forKey: "AllowedHosts") {
+        if let value = defaults.object(forKey: Key.allowedHosts.rawValue) {
             guard let hosts = value as? [String] else {
                 throw ValidationError.invalidAllowedHosts
             }
@@ -89,7 +102,7 @@ nonisolated struct ManagedConfiguration: Equatable, Sendable {
         }
 
         let idleResetSeconds: Int
-        if let value = defaults.object(forKey: "IdleResetSeconds") {
+        if let value = defaults.object(forKey: Key.idleResetSeconds.rawValue) {
             guard let number = value as? NSNumber,
                   CFGetTypeID(number) != CFBooleanGetTypeID(),
                   number.doubleValue.rounded() == number.doubleValue,
@@ -103,7 +116,7 @@ nonisolated struct ManagedConfiguration: Equatable, Sendable {
         }
 
         let ephemeralSession: Bool
-        if let value = defaults.object(forKey: "EphemeralSession") {
+        if let value = defaults.object(forKey: Key.ephemeralSession.rawValue) {
             guard let enabled = value as? Bool else {
                 throw ValidationError.invalidEphemeralSession
             }
@@ -113,20 +126,20 @@ nonisolated struct ManagedConfiguration: Equatable, Sendable {
         }
 
         let displaySchedule: DisplaySchedule?
-        if let value = defaults.object(forKey: "DisplayScheduleEnabled") {
+        if let value = defaults.object(forKey: Key.displayScheduleEnabled.rawValue) {
             guard let enabled = value as? Bool else {
                 throw ValidationError.invalidDisplayScheduleEnabled
             }
 
             if enabled {
-                guard let onTime = defaults.object(forKey: "DisplayOnTime") as? String,
-                      let offTime = defaults.object(forKey: "DisplayOffTime") as? String
+                guard let onTime = defaults.object(forKey: Key.displayOnTime.rawValue) as? String,
+                      let offTime = defaults.object(forKey: Key.displayOffTime.rawValue) as? String
                 else {
                     throw ValidationError.invalidDisplaySchedule
                 }
 
                 let dayNames: [String]?
-                if let value = defaults.object(forKey: "DisplayDays") {
+                if let value = defaults.object(forKey: Key.displayDays.rawValue) {
                     guard let days = value as? [String] else {
                         throw ValidationError.invalidDisplaySchedule
                     }

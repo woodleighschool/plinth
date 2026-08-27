@@ -33,7 +33,6 @@ final class KioskSession {
         case inactive
     }
 
-    private static let configurationRefreshInterval = Duration.seconds(30)
     private static let idleCheckInterval = Duration.seconds(1)
     private static let retryDelay = Duration.seconds(2)
     private static let maximumBeginAttempts = 3
@@ -87,7 +86,15 @@ final class KioskSession {
                 self?.presentAdministratorEscape() ?? false
             }
         )
+        let configurationObserver = ManagedConfigurationObserver(
+            defaults: defaults
+        ) { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.refreshConfiguration()
+            }
+        }
         defer {
+            withExtendedLifetime(configurationObserver) {}
             eventMonitor.stop()
             retryTask?.cancel()
             scheduleBoundaryTask?.cancel()
@@ -99,26 +106,12 @@ final class KioskSession {
 
         await withTaskGroup(of: Void.self) { group in
             group.addTask { [weak self] in
-                await self?.monitorConfiguration()
-            }
-            group.addTask { [weak self] in
                 await self?.monitorIdleTimeout()
             }
             group.addTask { [weak self] in
                 await self?.monitorScheduleEvents()
             }
             await group.waitForAll()
-        }
-    }
-
-    private func monitorConfiguration() async {
-        while !Task.isCancelled {
-            do {
-                try await Task.sleep(for: Self.configurationRefreshInterval)
-            } catch {
-                return
-            }
-            refreshConfiguration()
         }
     }
 
