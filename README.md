@@ -19,7 +19,7 @@ The `au.edu.vic.woodleigh.Plinth` defaults domain supports:
 | `DisplayDays`            | Array of strings | Optional title-case weekday names for interval starts; defaults to weekdays.  |
 | `EscapeCode`             | String           | Enables administrator exit with Control-Option-Command-E when non-empty.      |
 
-Display intervals include the on time and exclude the off time. An overnight interval belongs to the day on which it starts. Setting `Enabled` to false releases the power assertions and stops Plinth from controlling display sleep.
+Display intervals include the on time and exclude the off time. An overnight interval belongs to the day on which it starts. During scheduled hours, Plinth prevents idle system and display sleep. At the off time it releases both assertions and sleeps the display once; AAC and the browser remain active, and later display wakes follow normal macOS idle policy. Launching outside scheduled hours does not force the display to sleep.
 
 ## 🧑‍💻 Development
 

@@ -56,25 +56,23 @@ final class PowerController {
     private var systemSleepAssertion: Assertion?
     private var displaySleepAssertion: Assertion?
 
-    func enableScheduling() throws {
-        guard systemSleepAssertion == nil else {
-            return
+    func keepDisplayAwake() throws {
+        let acquiresAssertions = systemSleepAssertion == nil || displaySleepAssertion == nil
+        if systemSleepAssertion == nil {
+            systemSleepAssertion = try Assertion(
+                type: kIOPMAssertPreventUserIdleSystemSleep as CFString,
+                reason: "Plinth managed display hours" as CFString,
+                operation: "Preventing idle system sleep"
+            )
+        }
+        if displaySleepAssertion == nil {
+            displaySleepAssertion = try Assertion(
+                type: kIOPMAssertPreventUserIdleDisplaySleep as CFString,
+                reason: "Plinth managed display hours" as CFString,
+                operation: "Preventing idle display sleep"
+            )
         }
 
-        systemSleepAssertion = try Assertion(
-            type: kIOPMAssertPreventUserIdleSystemSleep as CFString,
-            reason: "Plinth managed display scheduling" as CFString,
-            operation: "Preventing idle system sleep"
-        )
-        Log.power.info("Managed display scheduling enabled")
-    }
-
-    func disableScheduling() {
-        displaySleepAssertion = nil
-        systemSleepAssertion = nil
-    }
-
-    func wakeDisplay() throws {
         var userActivityAssertion = IOPMAssertionID(kIOPMNullAssertionID)
         let result = IOPMAssertionDeclareUserActivity(
             "Plinth managed display schedule" as CFString,
@@ -90,18 +88,18 @@ final class PowerController {
             }
         }
 
-        if displaySleepAssertion == nil {
-            displaySleepAssertion = try Assertion(
-                type: kIOPMAssertPreventUserIdleDisplaySleep as CFString,
-                reason: "Plinth managed display hours" as CFString,
-                operation: "Preventing idle display sleep"
-            )
+        if acquiresAssertions {
+            Log.power.info("Display held awake during managed display hours")
         }
-        Log.power.info("Display awake for managed display hours")
     }
 
-    func allowDisplaySleep() {
+    func allowIdleSleep() {
+        let releasesAssertions = systemSleepAssertion != nil || displaySleepAssertion != nil
         displaySleepAssertion = nil
+        systemSleepAssertion = nil
+        if releasesAssertions {
+            Log.power.info("Managed display hours ended")
+        }
     }
 
     nonisolated func sleepDisplay() async throws {
