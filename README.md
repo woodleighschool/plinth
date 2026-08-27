@@ -1,6 +1,15 @@
-# plinth
+# Plinth
 
-Plinth runs web-based assessments and kiosk sessions on managed Macs. It stays in maintenance mode until managed configuration enables it, then loads configured sites in `WKWebView`. Automatic Assessment Configuration blocks other apps and system features until the session ends.
+[![Release](https://img.shields.io/github/v/release/woodleighschool/plinth?display_name=tag&sort=semver)](https://github.com/woodleighschool/plinth/releases/latest)
+[![CI](https://github.com/woodleighschool/plinth/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/woodleighschool/plinth/actions/workflows/ci.yaml)
+![macOS 26+](https://img.shields.io/badge/macOS-26%2B-000000?logo=apple&logoColor=white)
+[![License](https://img.shields.io/github/license/woodleighschool/plinth)](https://github.com/woodleighschool/plinth/blob/main/LICENSE)
+
+Plinth is a browser for macOS 26 or later that runs inside Automatic Assessment Configuration. Managed configuration chooses the site, browser limits, display schedule, and whether the app is active.
+
+## 🚀 Usage
+
+Download the `.pkg` from the [latest release](https://github.com/woodleighschool/plinth/releases/latest). It installs `Plinth.app` in `/Applications` and a LaunchAgent in `/Library/LaunchAgents`. The agent starts Plinth when a user signs in and restarts it after a failure. Installing an update restarts Plinth for the active user.
 
 ## ⚙️ Configuration
 
@@ -32,6 +41,8 @@ mise run test
 mise run build
 mise run workflow-lint
 ```
+
+`mise run build` produces a local app build without installing it or loading the LaunchAgent.
 
 A DEBUG build can pass `--unlocked` to exercise WebKit without entering assessment mode. That bypass is not compiled into Release builds.
 
