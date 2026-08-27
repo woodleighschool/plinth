@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.7](https://github.com/woodleighschool/plinth/compare/0.1.6...0.1.7) (2026-08-27)
+
+
+### Bug Fixes
+
+* **kiosk:** make blocked navigation dismissible ([ed7f132](https://github.com/woodleighschool/plinth/commit/ed7f132243740adfd19aa66bf12e1fc030934df3))
+
+
+### Code Refactoring
+
+* observe managed configuration changes ([cd84571](https://github.com/woodleighschool/plinth/commit/cd84571fefab399b3d74eb27333b805e925aa38c))
+
 ## [0.1.6](https://github.com/woodleighschool/plinth/compare/0.1.5...0.1.6) (2026-08-26)
 
 
