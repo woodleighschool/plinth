@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.8](https://github.com/woodleighschool/plinth/compare/0.1.7...0.1.8) (2026-08-27)
+
+
+### Bug Fixes
+
+* decouple kiosk from display schedule ([5582dcd](https://github.com/woodleighschool/plinth/commit/5582dcd25ab2eda7091f105df9ed2a24744f7590))
+
+
+### Documentation
+
+* clarify usage and releases ([abd870a](https://github.com/woodleighschool/plinth/commit/abd870a1d088c5440d6f394f1bd570063a14e3d3))
+
 ## [0.1.7](https://github.com/woodleighschool/plinth/compare/0.1.6...0.1.7) (2026-08-27)
 
 
