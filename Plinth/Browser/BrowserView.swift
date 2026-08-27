@@ -28,19 +28,27 @@ struct BrowserView: View {
     @State private var failure: BrowserFailure?
 
     var body: some View {
-        ZStack {
-            ManagedWebView(configuration: configuration) {
-                failure = $0
-            }
-
+        ManagedWebView(configuration: configuration) {
+            failure = $0
+        }
+        .alert(
+            failure?.title ?? "Navigation blocked",
+            isPresented: failureIsPresented
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
             if let failure {
-                StatusView(
-                    title: failure.title,
-                    message: failure.message,
-                    systemImage: "exclamationmark.triangle"
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(.background)
+                Text(failure.message)
+            }
+        }
+    }
+
+    private var failureIsPresented: Binding<Bool> {
+        Binding {
+            failure != nil
+        } set: { isPresented in
+            if !isPresented {
+                failure = nil
             }
         }
     }
