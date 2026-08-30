@@ -36,12 +36,6 @@ struct KioskView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(.background)
-        .background {
-            WindowConfigurator()
-        }
-        .task {
-            await session.run()
-        }
         .alert("Administrator exit", isPresented: administratorEscapeIsPresented) {
             SecureField("Escape code", text: $administratorEscapeCode)
             Button("Cancel", role: .cancel) {}
