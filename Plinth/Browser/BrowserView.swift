@@ -71,13 +71,14 @@ private struct ManagedWebView: NSViewRepresentable {
             ? .nonPersistent()
             : .default()
 
-        let webView = KioskWebView(
+        let webView = WKWebView(
             frame: .zero,
             configuration: webConfiguration
         )
         webView.isInspectable = false
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
+        context.coordinator.startContextMenuMonitoring(for: webView)
         webView.load(URLRequest(url: configuration.startURL))
         return webView
     }
@@ -86,17 +87,12 @@ private struct ManagedWebView: NSViewRepresentable {
 
     static func dismantleNSView(
         _ webView: WKWebView,
-        coordinator _: BrowserController
+        coordinator: BrowserController
     ) {
+        coordinator.stopContextMenuMonitoring()
         webView.stopLoading()
         webView.navigationDelegate = nil
         webView.uiDelegate = nil
-    }
-}
-
-final class KioskWebView: WKWebView {
-    override func menu(for _: NSEvent) -> NSMenu? {
-        nil
     }
 }
 
@@ -104,6 +100,8 @@ final class KioskWebView: WKWebView {
 final class BrowserController: NSObject, WKNavigationDelegate, WKUIDelegate {
     private let urlPolicy: URLPolicy
     private let reportFailure: @MainActor (BrowserFailure) -> Void
+    private weak var webView: WKWebView?
+    private var contextMenuMonitor: Any?
 
     init(
         urlPolicy: URLPolicy,
@@ -111,6 +109,72 @@ final class BrowserController: NSObject, WKNavigationDelegate, WKUIDelegate {
     ) {
         self.urlPolicy = urlPolicy
         self.reportFailure = reportFailure
+    }
+
+    func startContextMenuMonitoring(for webView: WKWebView) {
+        guard contextMenuMonitor == nil else {
+            return
+        }
+
+        self.webView = webView
+        contextMenuMonitor = NSEvent.addLocalMonitorForEvents(
+            matching: [.leftMouseDown, .rightMouseDown]
+        ) { [weak self] event in
+            guard let self,
+                  Self.isContextMenuClick(event),
+                  let webView = self.webView,
+                  event.window === webView.window,
+                  webView.bounds.contains(
+                      webView.convert(event.locationInWindow, from: nil)
+                  )
+            else {
+                return event
+            }
+
+            NSMenu.popUpContextMenu(
+                navigationMenu(for: webView),
+                with: event,
+                for: webView
+            )
+            return nil
+        }
+    }
+
+    func stopContextMenuMonitoring() {
+        guard let contextMenuMonitor else {
+            return
+        }
+
+        NSEvent.removeMonitor(contextMenuMonitor)
+        self.contextMenuMonitor = nil
+        webView = nil
+    }
+
+    func navigationMenu(for webView: WKWebView) -> NSMenu {
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        menu.addItem(
+            menuItem(
+                title: "Back",
+                action: #selector(goBack(_:)),
+                isEnabled: webView.canGoBack
+            )
+        )
+        menu.addItem(
+            menuItem(
+                title: "Reload",
+                action: #selector(reload(_:)),
+                isEnabled: true
+            )
+        )
+        menu.addItem(
+            menuItem(
+                title: "Forward",
+                action: #selector(goForward(_:)),
+                isEnabled: webView.canGoForward
+            )
+        )
+        return menu
     }
 
     func handleTopLevelNavigation(to url: URL) -> Bool {
@@ -190,5 +254,37 @@ final class BrowserController: NSObject, WKNavigationDelegate, WKUIDelegate {
     private func logBlockedNavigation(_ url: URL) {
         let host = url.host ?? "unknown"
         Log.browser.notice("Blocked top-level navigation to host \(host, privacy: .public)")
+    }
+
+    private static func isContextMenuClick(_ event: NSEvent) -> Bool {
+        event.type == .rightMouseDown ||
+            (event.type == .leftMouseDown && event.modifierFlags.contains(.control))
+    }
+
+    private func menuItem(
+        title: String,
+        action: Selector,
+        isEnabled: Bool
+    ) -> NSMenuItem {
+        let item = NSMenuItem(
+            title: title,
+            action: action,
+            keyEquivalent: ""
+        )
+        item.target = self
+        item.isEnabled = isEnabled
+        return item
+    }
+
+    @objc private func goBack(_: NSMenuItem) {
+        webView?.goBack()
+    }
+
+    @objc private func reload(_: NSMenuItem) {
+        webView?.reload()
+    }
+
+    @objc private func goForward(_: NSMenuItem) {
+        webView?.goForward()
     }
 }

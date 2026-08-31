@@ -1,6 +1,7 @@
 import Foundation
 @testable import Plinth
 import Testing
+import WebKit
 
 @MainActor
 struct BrowserControllerTests {
@@ -37,5 +38,15 @@ struct BrowserControllerTests {
 
         #expect(allowed)
         #expect(failures.isEmpty)
+    }
+
+    @Test func contextMenuContainsOnlyBrowserNavigation() throws {
+        let policy = try URLPolicy(allowedHosts: ["example.invalid"])
+        let controller = BrowserController(urlPolicy: policy) { _ in }
+        let menu = controller.navigationMenu(for: WKWebView())
+
+        #expect(menu.items.map(\.title) == ["Back", "Reload", "Forward"])
+        #expect(menu.items.map(\.isEnabled) == [false, true, false])
+        #expect(menu.items.map(\.keyEquivalent) == ["", "", ""])
     }
 }
