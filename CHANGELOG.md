@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.9](https://github.com/woodleighschool/plinth/compare/0.1.8...0.1.9) (2026-08-31)
+
+
+### Continuous Integration
+
+* **github-action:** update action jdx/mise-action (v4.2.5 → v4.3.0) ([#11](https://github.com/woodleighschool/plinth/issues/11)) ([2de1db9](https://github.com/woodleighschool/plinth/commit/2de1db9991598acaf638650fae07cd76bb26365b))
+
+
+### Miscellaneous Chores
+
+* **mise:** update tool lefthook (2.1.11 → 2.1.12) ([#13](https://github.com/woodleighschool/plinth/issues/13)) ([76aaf3c](https://github.com/woodleighschool/plinth/commit/76aaf3c5528922fb80d938b8f439ef18b0cd0daa))
+
 ## [0.1.8](https://github.com/woodleighschool/plinth/compare/0.1.7...0.1.8) (2026-08-27)
 
 
