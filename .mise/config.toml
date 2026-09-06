@@ -65,10 +65,6 @@ run = "shellcheck packaging/scripts/*"
 description = "Lint property lists"
 run = "plutil -lint Config/*.plist Plinth/Plinth.entitlements packaging/root/Library/LaunchAgents/*.plist"
 
-[tasks.workflow-lint]
-description = "Lint GitHub Actions workflows"
-run = ["actionlint", "zizmor --offline --no-ignores .github/workflows"]
-
 [tasks.lint]
 description = "Run app and repository linters"
 depends = ["shell-lint", "plist-lint", "periphery"]

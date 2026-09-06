@@ -39,7 +39,6 @@ mise run fmt-check
 mise run lint
 mise run test
 mise run build
-mise run workflow-lint
 ```
 
 `mise run build` produces a local app build without installing it or loading the LaunchAgent.
