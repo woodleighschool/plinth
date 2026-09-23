@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.9](https://github.com/woodleighschool/plinth/compare/0.1.8...0.1.9) (2026-09-23)
+
+
+### Continuous Integration
+
+* **github-action:** update action jdx/mise-action (v4.2.5 → v4.3.0) ([#11](https://github.com/woodleighschool/plinth/issues/11)) ([2de1db9](https://github.com/woodleighschool/plinth/commit/2de1db9991598acaf638650fae07cd76bb26365b))
+
+
+### Miscellaneous Chores
+
+* **github-action:** Update action home-operations/.github/actions/workflow-lint (v1.0.3 → v1.0.4) ([#16](https://github.com/woodleighschool/plinth/issues/16)) ([d03561e](https://github.com/woodleighschool/plinth/commit/d03561e9edac568629ea705131a0a44b9b607a1f))
+* **github-action:** update action ubuntu (24.04 → 26.04) ([#15](https://github.com/woodleighschool/plinth/issues/15)) ([3d6042c](https://github.com/woodleighschool/plinth/commit/3d6042c9e39686faffb5034b0f4208e922d8de2c))
+* **mise:** update mise tools ([#14](https://github.com/woodleighschool/plinth/issues/14)) ([cd240c2](https://github.com/woodleighschool/plinth/commit/cd240c2f17fd45622cf087418486edc1595f2043))
+* **mise:** update tool lefthook (2.1.11 → 2.1.12) ([#13](https://github.com/woodleighschool/plinth/issues/13)) ([76aaf3c](https://github.com/woodleighschool/plinth/commit/76aaf3c5528922fb80d938b8f439ef18b0cd0daa))
+
 ## [0.1.8](https://github.com/woodleighschool/plinth/compare/0.1.7...0.1.8) (2026-08-27)
 
 
