@@ -12,6 +12,7 @@ nonisolated struct ManagedConfiguration: Equatable, Sendable {
         case allowedHosts = "AllowedHosts"
         case idleResetSeconds = "IdleResetSeconds"
         case ephemeralSession = "EphemeralSession"
+        case networkParticipants = "NetworkParticipants"
         case displayScheduleEnabled = "DisplayScheduleEnabled"
         case displayOnTime = "DisplayOnTime"
         case displayOffTime = "DisplayOffTime"
@@ -52,6 +53,7 @@ nonisolated struct ManagedConfiguration: Equatable, Sendable {
     let urlPolicy: URLPolicy
     let idleResetSeconds: Int
     let ephemeralSession: Bool
+    let networkParticipants: [NetworkParticipant]
     let displaySchedule: DisplaySchedule?
 
     static func administratorEscapeCode(from defaults: UserDefaults) -> String? {
@@ -164,12 +166,15 @@ nonisolated struct ManagedConfiguration: Equatable, Sendable {
             displaySchedule = nil
         }
 
-        return .enabled(
+        return try .enabled(
             ManagedConfiguration(
                 startURL: startURL,
                 urlPolicy: urlPolicy,
                 idleResetSeconds: idleResetSeconds,
                 ephemeralSession: ephemeralSession,
+                networkParticipants: NetworkParticipant.load(
+                    from: defaults.object(forKey: Key.networkParticipants.rawValue)
+                ),
                 displaySchedule: displaySchedule
             )
         )

@@ -22,7 +22,7 @@ description = "Check Swift formatting"
 run = "swiftformat Plinth PlinthTests --lint"
 
 [tasks.build]
-description = "Build the unsigned universal macOS app"
+description = "Build the unsigned macOS app"
 run = """
 xcodebuild build \
   -project Plinth.xcodeproj \

@@ -75,6 +75,7 @@ private struct ManagedWebView: NSViewRepresentable {
             frame: .zero,
             configuration: webConfiguration
         )
+        webView.isHidden = !context.environment.isEnabled
         webView.isInspectable = false
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
@@ -83,7 +84,11 @@ private struct ManagedWebView: NSViewRepresentable {
         return webView
     }
 
-    func updateNSView(_: WKWebView, context _: Context) {}
+    func updateNSView(_ webView: WKWebView, context: Context) {
+        // A SwiftUI overlay alone leaves AppKit's keyboard focus and input active.
+        // Hiding the native view suspends input without discarding the page.
+        webView.isHidden = !context.environment.isEnabled
+    }
 
     static func dismantleNSView(
         _ webView: WKWebView,
@@ -123,6 +128,7 @@ final class BrowserController: NSObject, WKNavigationDelegate, WKUIDelegate {
             guard let self,
                   Self.isContextMenuClick(event),
                   let webView = self.webView,
+                  !webView.isHiddenOrHasHiddenAncestor,
                   event.window === webView.window,
                   webView.bounds.contains(
                       webView.convert(event.locationInWindow, from: nil)

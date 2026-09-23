@@ -3,6 +3,27 @@ import Foundation
 import Testing
 
 struct ManagedConfigurationTests {
+    @Test func exampleProfileLoadsThroughManagedDefaults() throws {
+        let profileURL = URL(filePath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appending(path: "Config/Plinth.mobileconfig")
+        let profile = try #require(PropertyListSerialization.propertyList(
+            from: Data(contentsOf: profileURL),
+            format: nil
+        ) as? [String: Any])
+        let payloads = try #require(profile["PayloadContent"] as? [[String: Any]])
+        let payload = try #require(payloads.first { $0["PayloadType"] as? String == "au.edu.vic.woodleigh.Plinth" })
+        let suiteName = "PlinthProfileTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.setPersistentDomain(payload, forName: suiteName)
+
+        let configuration = try #require(ManagedConfiguration.load(from: defaults).configuration)
+        #expect(configuration.networkParticipants.count == 6)
+        #expect(configuration.networkParticipants.filter(\.isRequired).count == 2)
+    }
+
     @Test func loadsValidConfiguration() throws {
         let defaults = makeDefaults()
         defaults.set(true, forKey: "Enabled")
@@ -10,6 +31,7 @@ struct ManagedConfigurationTests {
         defaults.set(["example.invalid", "login.example.invalid"], forKey: "AllowedHosts")
         defaults.set(300, forKey: "IdleResetSeconds")
         defaults.set(false, forKey: "EphemeralSession")
+        defaults.set([["ExecutablePath": "/usr/local/bin/agent"]], forKey: "NetworkParticipants")
         defaults.set(true, forKey: "DisplayScheduleEnabled")
         defaults.set("08:00", forKey: "DisplayOnTime")
         defaults.set("17:30", forKey: "DisplayOffTime")
@@ -22,6 +44,7 @@ struct ManagedConfigurationTests {
         #expect(configuration.urlPolicy.allowedHosts == ["example.invalid", "login.example.invalid"])
         #expect(configuration.idleResetSeconds == 300)
         #expect(!configuration.ephemeralSession)
+        #expect(configuration.networkParticipants.map(\.identity) == [.executable(path: "/usr/local/bin/agent")])
         #expect(configuration.displaySchedule?.onTime.hour == 8)
         #expect(configuration.displaySchedule?.onTime.minute == 0)
         #expect(configuration.displaySchedule?.offTime.hour == 17)
@@ -91,6 +114,7 @@ struct ManagedConfigurationTests {
         )
 
         #expect(try #require(state.configuration).ephemeralSession)
+        #expect(try #require(state.configuration).networkParticipants.isEmpty)
     }
 
     @Test func defaultsDisplaySchedulingToDisabled() throws {

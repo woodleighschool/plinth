@@ -10,13 +10,19 @@ final class KioskSession {
         case startup
         case maintenance
         case configurationError(String)
-        case unavailable
+        case unavailable(String)
         case browser(BrowserPresentation)
     }
 
     struct BrowserPresentation: Equatable, Identifiable {
         let id: UUID
         let configuration: ManagedConfiguration
+    }
+
+    enum AssessmentUpdate: Equatable {
+        case idle
+        case updating
+        case failed(String)
     }
 
     private enum InactivePresentation {
@@ -43,6 +49,7 @@ final class KioskSession {
 
     private(set) var presentation = Presentation.startup
     private(set) var presentsAdministratorEscape = false
+    private(set) var assessmentUpdate = AssessmentUpdate.idle
 
     private let defaults: UserDefaults
     private let assessmentController: AssessmentController
@@ -275,22 +282,26 @@ final class KioskSession {
     }
 
     private func activateKiosk(with configuration: ManagedConfiguration) {
-        let configurationChanged = desiredConfiguration.map {
+        let browserChanged = desiredConfiguration.map {
             $0.startURL != configuration.startURL ||
                 $0.urlPolicy != configuration.urlPolicy ||
                 $0.idleResetSeconds != configuration.idleResetSeconds ||
                 $0.ephemeralSession != configuration.ephemeralSession
         } ?? true
-        desiredConfiguration = configuration
-        if configurationChanged {
+        if desiredConfiguration != configuration {
             beginAttempts = 0
             retryTask?.cancel()
+        }
+        desiredConfiguration = configuration
+
+        if !browserChanged, case let .browser(browser) = presentation {
+            presentation = .browser(BrowserPresentation(id: browser.id, configuration: configuration))
         }
 
         #if DEBUG
             if runsUnlocked {
                 Log.assessment.notice("Running in DEBUG unlocked mode")
-                if configurationChanged || !showsBrowser {
+                if browserChanged || !showsBrowser {
                     showBrowser(using: configuration)
                 }
                 return
@@ -298,7 +309,8 @@ final class KioskSession {
         #endif
 
         if assessmentController.hasSession {
-            if configurationChanged, case .browser = presentation {
+            assessmentController.update(networkParticipants: configuration.networkParticipants)
+            if browserChanged, case .browser = presentation {
                 showBrowser(using: configuration)
             }
             return
@@ -319,6 +331,7 @@ final class KioskSession {
         cancelDisplaySleepRequest()
         powerController.allowIdleSleep()
         presentation = .startup
+        assessmentUpdate = .idle
 
         #if DEBUG
             if runsUnlocked {
@@ -444,6 +457,7 @@ final class KioskSession {
     private func beginAdministratorExit() {
         presentsAdministratorEscape = false
         presentation = .startup
+        assessmentUpdate = .idle
         exitsForAdministrator = true
         administratorEscapeCode = nil
         configuredConfiguration = nil
@@ -468,7 +482,7 @@ final class KioskSession {
     }
 
     private func beginAssessment() {
-        guard desiredConfiguration != nil,
+        guard let desiredConfiguration,
               !assessmentController.hasSession,
               beginAttempts < Self.maximumBeginAttempts
         else {
@@ -477,7 +491,8 @@ final class KioskSession {
 
         beginAttempts += 1
         presentation = .startup
-        assessmentController.begin()
+        assessmentUpdate = .idle
+        assessmentController.begin(networkParticipants: desiredConfiguration.networkParticipants)
     }
 
     private func scheduleAssessmentRetry() {
@@ -536,12 +551,27 @@ final class KioskSession {
         case let .configurationError(message):
             presentation = .configurationError(message)
         case .unavailable:
-            presentation = .unavailable
+            presentation = .unavailable("Contact IT for assistance.")
         }
     }
 }
 
 extension KioskSession: AssessmentControllerDelegate {
+    func assessmentWillUpdate() {
+        assessmentUpdate = .updating
+    }
+
+    func assessmentDidUpdate() {
+        assessmentUpdate = .idle
+        if !exitsForAdministrator, let desiredConfiguration, !showsBrowser {
+            showBrowser(using: desiredConfiguration)
+        }
+    }
+
+    func assessmentFailedToUpdate(with error: any Error) {
+        assessmentUpdate = .failed(error.localizedDescription)
+    }
+
     func assessmentDidBegin() {
         if exitsForAdministrator {
             assessmentController.end()
@@ -557,7 +587,8 @@ extension KioskSession: AssessmentControllerDelegate {
         showBrowser(using: desiredConfiguration)
     }
 
-    func assessmentFailedToBegin(with _: any Error) {
+    func assessmentFailedToBegin(with error: any Error) {
+        assessmentUpdate = .idle
         if exitsForAdministrator {
             completeAdministratorExit()
             return
@@ -566,12 +597,13 @@ extension KioskSession: AssessmentControllerDelegate {
         if desiredConfiguration == nil {
             showInactivePresentation()
         } else {
-            presentation = .unavailable
+            presentation = .unavailable(error.localizedDescription)
             scheduleAssessmentRetry()
         }
     }
 
-    func assessmentWasInterrupted(with _: any Error) {
+    func assessmentWasInterrupted(with error: any Error) {
+        assessmentUpdate = .idle
         if exitsForAdministrator {
             assessmentController.end()
             return
@@ -580,18 +612,20 @@ extension KioskSession: AssessmentControllerDelegate {
         if desiredConfiguration == nil {
             showInactivePresentation()
         } else {
-            presentation = .unavailable
+            presentation = .unavailable(error.localizedDescription)
         }
         assessmentController.end()
     }
 
     func assessmentDidEnd() {
+        assessmentUpdate = .idle
         if exitsForAdministrator {
             completeAdministratorExit()
             return
         }
 
         if desiredConfiguration != nil {
+            presentation = .startup
             scheduleAssessmentRetry()
         } else {
             showInactivePresentation()

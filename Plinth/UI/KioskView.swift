@@ -24,18 +24,40 @@ struct KioskView: View {
                     title: "Assessment browser configuration error",
                     message: message
                 )
-            case .unavailable:
+            case let .unavailable(message):
                 StatusView(
                     title: "Assessment browser unavailable",
-                    message: "Contact IT for assistance."
+                    message: message
                 )
             case let .browser(browser):
                 BrowserView(configuration: browser.configuration)
                     .id(browser.id)
+                    .disabled(session.assessmentUpdate != .idle)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(.background)
+        .overlay {
+            switch session.assessmentUpdate {
+            case .idle:
+                EmptyView()
+            case .updating:
+                StatusView(
+                    title: "Updating network access…",
+                    message: nil,
+                    showsProgress: true
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(.background)
+            case let .failed(message):
+                StatusView(
+                    title: "Network access update failed",
+                    message: "The previous assessment configuration is still active. Correct NetworkParticipants in managed settings.\n\n\(message)"
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(.background)
+            }
+        }
         .alert("Administrator exit", isPresented: administratorEscapeIsPresented) {
             SecureField("Escape code", text: $administratorEscapeCode)
             Button("Cancel", role: .cancel) {}
