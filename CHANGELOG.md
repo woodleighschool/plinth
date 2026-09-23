@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.1.10](https://github.com/woodleighschool/plinth/compare/0.1.9...0.1.10) (2026-09-23)
+
+
+### Features
+
+* allow managed network participants during assessment ([0cf8c62](https://github.com/woodleighschool/plinth/commit/0cf8c6261217a8e478f456022175205bd70a4d3f))
+
+
+### Bug Fixes
+
+* actionlint xcode 27 runner allow ([96d0260](https://github.com/woodleighschool/plinth/commit/96d02601c2707f9917d391dd52d37571102edc6e))
+* limit browser context menu ([ad0b037](https://github.com/woodleighschool/plinth/commit/ad0b037ca5863e178dfd6018c8f173119e4629c3))
+* present kiosk before starting assessment ([6163edb](https://github.com/woodleighschool/plinth/commit/6163edbca8dc6fe2417ba4576e504b4b19692fa2))
+
+
+### Continuous Integration
+
+* avoid redundant release metadata checks ([431631d](https://github.com/woodleighschool/plinth/commit/431631d29ccd7cf866c1a2dc4f9f67ee9d4e7292))
+
+
+### Miscellaneous Chores
+
+* fresh mise lock ([163c385](https://github.com/woodleighschool/plinth/commit/163c385b1142bd79ebe22b13ed5bd1ad3477eebd))
+* remove redundant workflow lint task ([707d819](https://github.com/woodleighschool/plinth/commit/707d8197df7d2bb41a3ee36df4cd2f93f0f3fdab))
+
 ## [0.1.9](https://github.com/woodleighschool/plinth/compare/0.1.8...0.1.9) (2026-09-23)
 
 
