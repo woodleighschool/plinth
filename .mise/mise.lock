@@ -55,10 +55,10 @@ backend = "npm:@commitlint/cli"
 specifiers = ["21.2.3"]
 
 [[tools.oxfmt]]
-version = "0.68.0"
-aube = { path = "locks/oxfmt/0.68.0", digest = "sha256:77b5f0babfeae0bf16bc5f66996d6554cbb5ab2b6c30ae27db057f3b5f111355" }
+version = "0.70.0"
+aube = { path = "locks/oxfmt/0.70.0", digest = "sha256:6f43444e29a288a4c8eaae0fd4842397419f6bde12beb04d2be2216a275f96e2" }
 backend = "npm:oxfmt"
-specifiers = ["0.68.0"]
+specifiers = ["0.70.0"]
 
 [[tools.periphery]]
 version = "3.8.0"
