@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>
+        <dict>
+            <key>PayloadIdentifier</key>
+            <string>au.edu.vic.woodleigh.Plinth.configuration</string>
+            <key>PayloadType</key>
+            <string>au.edu.vic.woodleigh.Plinth</string>
+            <key>PayloadUUID</key>
+            <string>C29871B5-BC43-446B-A252-4963C32F89D8</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+            <key>Enabled</key>
+            <true/>
+            <key>StartURL</key>
+            <string>https://woodleigh.softlinkhosting.com.au/oliver/home/browse/list</string>
+            <key>AllowedHosts</key>
+            <array>
+                <string>woodleigh.softlinkhosting.com.au</string>
+                <string>login.microsoftonline.com</string>
+            </array>
+            <key>IdleResetSeconds</key>
+            <integer>300</integer>
+            <key>EphemeralSession</key>
+            <true/>
+            <!-- Replace this example code before installing. -->
+            <key>EscapeCode</key>
+            <string>change-this-code</string>
+            <key>NetworkParticipants</key>
+            <array>
+                <!-- APNs and MDM candidates; verify profile delivery during AAC. -->
+                <dict>
+                    <key>ExecutablePath</key>
+                    <string>/System/Library/PrivateFrameworks/ApplePushService.framework/apsd</string>
+                    <key>Required</key>
+                    <true/>
+                </dict>
+                <dict>
+                    <key>ExecutablePath</key>
+                    <string>/usr/libexec/mdmclient</string>
+                    <key>Required</key>
+                    <true/>
+                </dict>
+                <!-- Intune's bundled agent and standalone daemon have separate identities. -->
+                <dict>
+                    <key>BundleIdentifier</key>
+                    <string>com.microsoft.intuneMDMAgent</string>
+                    <key>TeamIdentifier</key>
+                    <string>UBF8T346G9</string>
+                </dict>
+                <dict>
+                    <key>ExecutablePath</key>
+                    <string>/Library/Intune/Microsoft Intune Agent.app/Contents/MacOS/IntuneMdmDaemon</string>
+                    <key>TeamIdentifier</key>
+                    <string>UBF8T346G9</string>
+                </dict>
+                <!-- Signed native Munki 7 binaries, not the older Python scripts. -->
+                <dict>
+                    <key>ExecutablePath</key>
+                    <string>/usr/local/munki/managedsoftwareupdate</string>
+                    <key>TeamIdentifier</key>
+                    <string>T4SK8ZXCXG</string>
+                </dict>
+                <dict>
+                    <key>ExecutablePath</key>
+                    <string>/usr/local/munki/libexec/precache_agent</string>
+                    <key>TeamIdentifier</key>
+                    <string>T4SK8ZXCXG</string>
+                </dict>
+            </array>
+        </dict>
+    </array>
+    <key>PayloadDisplayName</key>
+    <string>Plinth</string>
+    <key>PayloadIdentifier</key>
+    <string>au.edu.vic.woodleigh.Plinth</string>
+    <key>PayloadScope</key>
+    <string>System</string>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadUUID</key>
+    <string>E3D855EF-835E-4148-A398-5D96DB832FBC</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+</dict>
+</plist>

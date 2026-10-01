@@ -63,7 +63,7 @@ run = "shellcheck packaging/scripts/*"
 
 [tasks.plist-lint]
 description = "Lint property lists"
-run = "plutil -lint Config/*.plist Plinth/Plinth.entitlements packaging/root/Library/LaunchAgents/*.plist"
+run = "plutil -lint Config/*.plist Config/*.mobileconfig Plinth/Plinth.entitlements packaging/root/Library/LaunchAgents/*.plist"
 
 [tasks.lint]
 description = "Run app and repository linters"
