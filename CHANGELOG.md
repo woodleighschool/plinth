@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.1.10](https://github.com/woodleighschool/plinth/compare/0.1.9...0.1.10) (2026-09-23)
+## [0.1.10](https://github.com/woodleighschool/plinth/compare/v0.1.9...v0.1.10) (2026-09-23)
 
 
 ### Features
@@ -25,7 +25,7 @@
 * fresh mise lock ([163c385](https://github.com/woodleighschool/plinth/commit/163c385b1142bd79ebe22b13ed5bd1ad3477eebd))
 * remove redundant workflow lint task ([707d819](https://github.com/woodleighschool/plinth/commit/707d8197df7d2bb41a3ee36df4cd2f93f0f3fdab))
 
-## [0.1.9](https://github.com/woodleighschool/plinth/compare/0.1.8...0.1.9) (2026-09-23)
+## [0.1.9](https://github.com/woodleighschool/plinth/compare/v0.1.8...v0.1.9) (2026-09-23)
 
 
 ### Continuous Integration
@@ -40,7 +40,7 @@
 * **mise:** update mise tools ([#14](https://github.com/woodleighschool/plinth/issues/14)) ([cd240c2](https://github.com/woodleighschool/plinth/commit/cd240c2f17fd45622cf087418486edc1595f2043))
 * **mise:** update tool lefthook (2.1.11 → 2.1.12) ([#13](https://github.com/woodleighschool/plinth/issues/13)) ([76aaf3c](https://github.com/woodleighschool/plinth/commit/76aaf3c5528922fb80d938b8f439ef18b0cd0daa))
 
-## [0.1.8](https://github.com/woodleighschool/plinth/compare/0.1.7...0.1.8) (2026-08-27)
+## [0.1.8](https://github.com/woodleighschool/plinth/compare/v0.1.7...v0.1.8) (2026-08-27)
 
 
 ### Bug Fixes
@@ -52,7 +52,7 @@
 
 * clarify usage and releases ([abd870a](https://github.com/woodleighschool/plinth/commit/abd870a1d088c5440d6f394f1bd570063a14e3d3))
 
-## [0.1.7](https://github.com/woodleighschool/plinth/compare/0.1.6...0.1.7) (2026-08-27)
+## [0.1.7](https://github.com/woodleighschool/plinth/compare/v0.1.6...v0.1.7) (2026-08-27)
 
 
 ### Bug Fixes
@@ -64,14 +64,14 @@
 
 * observe managed configuration changes ([cd84571](https://github.com/woodleighschool/plinth/commit/cd84571fefab399b3d74eb27333b805e925aa38c))
 
-## [0.1.6](https://github.com/woodleighschool/plinth/compare/0.1.5...0.1.6) (2026-08-26)
+## [0.1.6](https://github.com/woodleighschool/plinth/compare/v0.1.5...v0.1.6) (2026-08-26)
 
 
 ### Miscellaneous Chores
 
 * really fullscreen, minus menubar ([b5c4cde](https://github.com/woodleighschool/plinth/commit/b5c4cde5a45ae10496a22f8a1876003b0e31dfa7))
 
-## [0.1.5](https://github.com/woodleighschool/plinth/compare/0.1.4...0.1.5) (2026-08-26)
+## [0.1.5](https://github.com/woodleighschool/plinth/compare/v0.1.4...v0.1.5) (2026-08-26)
 
 
 ### Bug Fixes
@@ -80,7 +80,7 @@
 * **kiosk:** handle blocked navigation and resize ([44a12cc](https://github.com/woodleighschool/plinth/commit/44a12cc8ab1108b7450f2be399dc3c5ec9cda443))
 * **kiosk:** use native administrator exit alert ([93b204c](https://github.com/woodleighschool/plinth/commit/93b204c1c0cdf7043c4f4e5e939bf4420a55cf1d))
 
-## [0.1.4](https://github.com/woodleighschool/plinth/compare/0.1.3...0.1.4) (2026-08-26)
+## [0.1.4](https://github.com/woodleighschool/plinth/compare/v0.1.3...v0.1.4) (2026-08-26)
 
 
 ### Features
@@ -88,7 +88,7 @@
 * add administrator escape hatch ([9ee5166](https://github.com/woodleighschool/plinth/commit/9ee5166afad61c55fa925a0f1967f5a94d52bb57))
 * add managed display scheduling ([9aa38f9](https://github.com/woodleighschool/plinth/commit/9aa38f97e5f42f3997169e0278b9a8db99d768d5))
 
-## [0.1.3](https://github.com/woodleighschool/plinth/compare/0.1.2...0.1.3) (2026-08-26)
+## [0.1.3](https://github.com/woodleighschool/plinth/compare/v0.1.2...v0.1.3) (2026-08-26)
 
 
 ### Bug Fixes
@@ -105,14 +105,14 @@
 
 * **mise:** update tool oxfmt (0.64.0 → 0.65.0) ([#2](https://github.com/woodleighschool/plinth/issues/2)) ([4435e5d](https://github.com/woodleighschool/plinth/commit/4435e5de83746d631491b936e4170db47218a8d4))
 
-## [0.1.2](https://github.com/woodleighschool/plinth/compare/0.1.1...0.1.2) (2026-08-26)
+## [0.1.2](https://github.com/woodleighschool/plinth/compare/v0.1.1...v0.1.2) (2026-08-26)
 
 
 ### Miscellaneous Chores
 
 * useless verification ([980ea18](https://github.com/woodleighschool/plinth/commit/980ea1877697b77eb03992843df07d088ea68396))
 
-## [0.1.1](https://github.com/woodleighschool/plinth/compare/0.1.0...0.1.1) (2026-08-25)
+## [0.1.1](https://github.com/woodleighschool/plinth/compare/0.1.0...v0.1.1) (2026-08-25)
 
 
 ### Bug Fixes
