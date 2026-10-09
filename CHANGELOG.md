@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.11](https://github.com/woodleighschool/plinth/compare/v0.1.10...v0.1.11) (2026-10-08)
+
+
+### Features
+
+* **npm:** update dependency oxfmt (0.68.0 → 0.70.0) ([#18](https://github.com/woodleighschool/plinth/issues/18)) ([de07d71](https://github.com/woodleighschool/plinth/commit/de07d71df59c809906dcb4dd3107810eec9d69f3))
+
 ## [0.1.10](https://github.com/woodleighschool/plinth/compare/v0.1.9...v0.1.10) (2026-09-23)
 
 
