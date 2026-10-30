@@ -139,9 +139,9 @@ nonisolated struct DisplaySchedule: Equatable, Sendable {
 
     private func interval(startingOn day: Date, calendar: Calendar) -> DateInterval? {
         guard let weekday = Weekday(
-            calendarWeekday: calendar.component(.weekday, from: day)
-        ), days.contains(weekday),
-        let start = date(on: day, at: onTime, repeatedTimePolicy: .first, calendar: calendar)
+                  calendarWeekday: calendar.component(.weekday, from: day)
+              ), days.contains(weekday),
+              let start = date(on: day, at: onTime, repeatedTimePolicy: .first, calendar: calendar)
         else {
             return nil
         }
